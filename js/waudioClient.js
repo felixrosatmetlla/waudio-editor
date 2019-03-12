@@ -1,11 +1,18 @@
 var context = new (window.AudioContext || window.webkitAudioContext);
 var testAudioBuffer;
 
+// var buffers = [];
+
 function manageMSG(){
 
 }
-function loadProject(projectMsg){
 
+function loadProject(projectMsg){
+	// Load Audios needed in buffers
+	for(var audio in projectMsg){
+		loadAudio(projectMsg[audio].url);
+	}
+	// Read Msg to set actual state of project in screen
 }
 
 function checkEditMode(track){
