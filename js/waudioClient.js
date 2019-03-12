@@ -1,6 +1,33 @@
 var context = new (window.AudioContext || window.webkitAudioContext);
 var testAudioBuffer;
 
+function manageMSG(){
+
+}
+function loadProject(projectMsg){
+
+}
+
+function checkEditMode(track){
+
+}
+
+function getFinalAudio(){
+
+}
+
+function cutAudio(){
+
+}
+
+function processProjectChanges(){
+
+}
+
+function moveAudio(){
+
+}
+
 function playAudio(buffer){
 	var source = context.createBufferSource();
 	source.buffer = buffer;
