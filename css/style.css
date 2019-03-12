@@ -1,0 +1,100 @@
+.index{
+	background-color: #DEDEDE;
+}
+
+/*---------------------------- HEADER ------------------------------ */
+.header {
+	background-color: #FF8B41;
+	padding:10px;
+	height: 20%;
+	min-height: 100px;
+	display: fixed;
+}
+
+
+/*---------------------------- CONTENT ----------------------------- */
+.content {
+	background-color: transparent;
+	height: 80%;
+	overflow-y: auto;
+}
+
+.track {
+	position: relative;
+	background-color: black;
+	height: 150px;
+	width: inherit;
+	margin: 10px;
+	box-shadow: 5px 5px 5px grey;
+
+}
+	.track-options {
+		position: absolute;
+		background-color: #FF8B41;
+		width: 100px;
+		height: inherit;
+		border-color: black;
+		border: 5px;
+		padding: 10px;
+		margin-left:0; 
+	}
+
+		.track-name{
+			background-color: white;
+			border-radius: 2px;
+			padding: 5px
+		}
+
+		.volume{
+			float: center;
+			margin-bottom: 0;
+		}
+			.center-icon{
+				float: center;
+				background-color: transparent;
+				width: 100%;
+				border: none;
+			}
+
+		.btn-action{
+			width: 100%;
+			background-color: white;
+			border: none;
+			border-radius: 8px;
+			height: 20px;
+			padding: 0;
+			float: center;
+		}
+			.btn-action:hover{
+				box-shadow: 1px 1px 5px #D47336;
+				cursor: pointer;
+			}
+
+	.track-audio {
+		position: relative;
+		border: 5px;
+		margin-left:100px;
+		background-color: white;
+		height: inherit;
+	}
+
+/*--------------------------- SCROLLBAR STYLE ---------------------------------*/
+/* width */
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+    background: #f1f1f1; 
+}
+ 
+/* Handle */
+::-webkit-scrollbar-thumb {
+    background: #555; 
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+    background: #888; 
+}
