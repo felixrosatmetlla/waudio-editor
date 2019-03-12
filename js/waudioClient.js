@@ -1,7 +1,7 @@
 var context = new (window.AudioContext || window.webkitAudioContext);
 var testAudioBuffer;
 
-// var buffers = [];
+var buffers = [];
 
 function manageMSG(){
 
@@ -35,13 +35,14 @@ function moveAudio(){
 
 }
 
-function playAudio(buffer){
+function playAudio(buffer, timeline){
 	var source = context.createBufferSource();
 	source.buffer = buffer;
 	var gainNode = context.createGain();
 	source.connect(gainNode);
 	gainNode.connect(context.destination);
-	gainNode.start(0);
+	gainNode.start(timeline[beg]);
+	gainNode.stop(timeline[end]);
 }
 
 function pauseAudio(source){
@@ -61,7 +62,7 @@ function loadAudio(url){
 
 	request.onload = function() {
 		context.decodeAudioData(request.response, function(buffer) {
-			testAudioBuffer = buffer;
+			buffers.push(buffer);
 		}, onError);
 	}
 	request.send();
