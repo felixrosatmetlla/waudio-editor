@@ -5,6 +5,7 @@ var buffers = [];
 var projectState = [];
 var buffersToPlay = [];
 var timelinesToPlay = [];
+var gain = [];
 
 function manageMSG(){
 
@@ -32,6 +33,7 @@ function loadProject(projectMsg){
 		    }
 		    buffersToPlay.push(emptyBuffer);
 		    timelinesToPlay.push(projectMsg[audio].timeline[times])
+		    gain.push(projectMsg[audio].gain)
 		}
 	}
 
