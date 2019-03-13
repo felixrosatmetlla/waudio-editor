@@ -31,7 +31,7 @@
 		grid-row-end: 3;
 	}
 
-	.generate {
+	.play {
 		height: 100%;
 		background-color: white;
 		border: none;
@@ -110,7 +110,7 @@
 			padding: 0;
 			float: center;
 		}
-			.btn-action:hover, .import-audio:hover, .generate:hover, .export:hover{
+			.btn-action:hover, .import-audio:hover, .play:hover, .export:hover{
 				box-shadow: 1px 1px 5px #D47336;
 				cursor: pointer;
 			}
