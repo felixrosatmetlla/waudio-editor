@@ -110,7 +110,7 @@
 			padding: 0;
 			float: center;
 		}
-			.btn-action:hover, .import-audio:hover {
+			.btn-action:hover, .import-audio:hover, .generate:hover, .export:hover{
 				box-shadow: 1px 1px 5px #D47336;
 				cursor: pointer;
 			}
