@@ -45,9 +45,27 @@ wsServer.on('request', function(request) {
                 clients.push(clientObj);
             }
 
-            if (msg.type === 'reqProj'){
-                var project = projects[msg.name];
+            else if (msg.type === 'reqProj'){
+                var project = {
+                    project: projects[msg.name], 
+                    type: 'project'
+                };
                 connection.sendUTF(JSON.stringify(project));
+            }
+
+            else if(msg.type === 'moveAudio'){
+                //TODO:Process data in own world
+                //TODO: Send Message
+            }
+
+            else if(msg.type === 'cutAudio'){
+                //TODO:Process data in own world
+                //TODO: Send Message
+            }
+
+            else if(msg.type === 'gainChange'){
+                //TODO:Process data in own world
+                //TODO: Send Message
             }
         }
     });

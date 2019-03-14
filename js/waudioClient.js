@@ -1,6 +1,7 @@
 var context = new (window.AudioContext || window.webkitAudioContext);
 var testAudioBuffer;
 
+var fs = 44100;
 // Create new server object
 var socket = new WebSocket("ws://localhost:9023/");
 
@@ -9,6 +10,17 @@ var projectState = [];
 var buffersToPlay = [];
 var timelinesToPlay = [];
 var gain = [];
+
+var local_user = {
+	id: null,
+	name: '',
+	editingAudio: null
+}
+
+
+var playButton = document.getElementByClassName('play');
+
+playButton.addEventListener('click', prepareToPlay);
 
 function requestProject(){
 	// get username value
@@ -29,8 +41,19 @@ function requestProject(){
 	socket.send(JSON.stringify(projectObj));
 }
 
-function manageMSG(){
+socket.onmessage = function(msg){
+	if (msg.type === 'project'){
+		loadProject(msg);
+	}
+	else if (msg.type === 'moveAudio'){
 
+	}
+	else if (msg.type === 'cutAudio'){
+
+	}
+	else if (msg.type === 'volumeChange'){
+		changeGain(msg.gain, msg.audio);
+	}
 }
 
 function uploadFile(){
@@ -64,12 +87,14 @@ function loadProject(projectMsg){
 	}
 
 	// Read Msg to set actual state of project in screen
+	// Paint
 }
 
 function getAudioIndex(audioName){
 	splitAudioName = string.split('_');
 	return splitAudioName[1];
 }
+
 function checkEditMode(track){
 
 }
@@ -79,15 +104,67 @@ function getFinalAudio(){
 }
 
 function cutAudio(){
+	//Get Start timeCut
+	var startTime;
+	var startSample = timeToSample(startTime);
+	
+	//Get final timecut
+	var endTime;
+	var endSample = timeToSample(endTime);
 
+	var startBuffer = context.createBuffer(1, startSample - 0, 44100);
+	var midBuffer = context.createBuffer(1, endSample - startSample, 44100);
+	var endBuffer = context.createBuffer(1, buffers[local_user.editingAudio].length - endSample, 44100);
+	
+	if(startSample===0){
+		for(i=0; i<endSample; i++){
+			startBuffer[i] = buffers[local_user.editingAudio][i];
+		}
+		for(i=0,j=endSample; j<buffers[local_user.editingAudio].length; i++, j++){
+			endBuffer[i] = buffers[local_user.editingAudio][j];
+		}
+	}
+	else if(endSample===buffers[local_user.editingAudio].length){
+		for(i=0; i<startSample; i++){
+			startBuffer[i] = buffers[local_user.editingAudio][i];
+		}
+		for(i=0,j=startSample; j<buffers[local_user.editingAudio].length; i++, j++){
+			endBuffer[i] = buffers[local_user.editingAudio][j];
+		}
+	}
+	else{
+		for(i=0; i<startSample; i++){
+			startBuffer[i] = buffers[local_user.editingAudio][i];
+		}
+		for(i=0,j=startSample; j<emptyBuffer.length; i++, j++){
+			midBuffer[i] = buffers[local_user.editingAudio][j];
+		}
+		for(i=0,j=endSample; j<buffers[local_user.editingAudio].length; i++, j++){
+			endBuffer[i] = buffers[local_user.editingAudio][j];
+		}
+	}
+	//TODO: Manage that we can get 2 or 3 buffers
+	//TODO: Save the buffers accordingly
+	
 }
 
-function processProjectChanges(){
-
+function timeToSample(time){
+	sample = time/fs;
+	return sample
 }
+
+// function processProjectChanges(){
+
+// }
 
 function moveAudio(){
+	//Get Start time Move
+	var destinationTime;
+	var destinationSample = timeToSample(destinationTime);
+	
+	var clipNumber
 
+	//Access the correct timeline audio clip position
 }
 
 function prepareToPlay(){ //Function that prepares the buffers to play them in time and order
@@ -113,11 +190,42 @@ function pauseAudio(source){
 	source.stop(context.currentTime + 1);
 }
 
-function changeGain(gainNode){
+function changeGain(gainValue, audio){ //By Message(update from other users change)
 	
-	source.gain.value = 0.5;
+	projectState[audio].gain = gainValue;
 
 }
+
+// TODO: Merge increase and decrease into one function
+function decreaseGain(){
+	var gainDelta = 0.1;
+	projectState[audio].gain = projectState[audio].gain - gainDelta;
+
+	var gainMsg = {
+		project: '',//To see where its defined
+		audio: audio, //Obtain audio name in which the user is working
+		gain: projectState[audio].gain,
+		type: gainChange
+	}
+
+	socket.send(JSON.stringify(gainMsg));
+}
+
+function increaseGain(){
+	var gainDelta = 0.1;
+	projectState[audio].gain = projectState[audio].gain + gainDelta;
+
+	var gainMsg = {
+		project: '',//To see where its defined
+		audio: audio, //Obtain audio name in which the user is working
+		gain: projectState[audio].gain,
+		type: gainChange
+	}
+
+	socket.send(JSON.stringify(gainMsg));
+}
+
+
 
 function loadAudio(url){
 	var request = new XMLHttpRequest();
@@ -133,9 +241,7 @@ function loadAudio(url){
 }
 //BufferLoader
 
-socket.onmessage = function(msg){
 
-}
 
 // var form = document.getElementById('file-form');
 // var fileSelect = document.getElementById('file-select');
@@ -186,3 +292,4 @@ socket.onmessage = function(msg){
 // 	// Send the Data.
 // 	request.send(formData);
 // }
+
