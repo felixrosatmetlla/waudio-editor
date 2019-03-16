@@ -243,53 +243,78 @@ function loadAudio(url){
 
 
 
-// var form = document.getElementById('file-form');
-// var fileSelect = document.getElementById('file-select');
-// var uploadButton = document.getElementById('upload-button');
+var form = document.getElementById('file-form');
+var fileSelect = document.getElementById('file-select');
+var uploadButton = document.getElementById('upload-button');
 
-// form.onsubmit = function(event) {
-// 	event.preventDefault();
+form.onsubmit = function(event) {
+	event.preventDefault();
 
-// 	// Update button text.
-// 	uploadButton.innerHTML = 'Uploading...';
+	// Update button text.
+	uploadButton.innerHTML = 'Uploading...';
 
-// 	// Get the selected files from the input.
-// 	var files = fileSelect.files;
+	// Get the selected files from the input.
+	var files = fileSelect.files;
 
-// 	// Create a new FormData object.
-// 	var formData = new FormData();
+	// Create a new FormData object.
+	var formData = new FormData();
 
-// 	// Loop through each of the selected files.
-// 	for (var i = 0; i < files.length; i++) {
-// 		var file = files[i];
+	// Loop through each of the selected files.
+	for (var i = 0; i < files.length; i++) {
+		var file = files[i];
 
-// 		// Check the file type.
-// 		if (!file.type.match('image.*')) {
-// 			continue;
-// 		}
+		// Check the file type.
+		if (!file.type.match('image.*')) {
+			continue;
+		}
 
-// 		// Add the file to the request.
-// 		formData.append('audios[]', file, file.name);
-// 	}
+		// Add the file to the request.
+		formData.append('audios[]', file, file.name);
+	}
 
-// 	// Set up the request.
-// 	var request = new XMLHttpRequest();
+	// Set up the request.
+	var request = new XMLHttpRequest();
 
-// 	// Open the connection.
-// 	request.open('POST', 'https://ecv-etic.upf.edu/students/2019/farora/waudio-editor/Projects/'+ProjectName, true);
+	// Open the connection.
+	request.open('POST', '/Upload', true);
 
-// 	// Set up a handler for when the request finishes.
-// 	request.onload = function () {
-// 		if (request.status === 200) {
-// 		// File(s) uploaded.
-// 			uploadButton.innerHTML = 'Upload';
-// 		} 
-// 		else {
-// 			alert('An error occurred!');
-// 		}
-// 	};
+	// Set up a handler for when the request finishes.
+	request.onload = function () {
+		if (request.status === 200) {
+		// File(s) uploaded.
+			uploadButton.innerHTML = 'Upload';
+		} 
+		else {
+			alert('An error occurred!');
+		}
+	};
 
-// 	// Send the Data.
-// 	request.send(formData);
-// }
+	// Send the Data.
+	request.send(formData);
+}
 
+let soundBlob = soundFile.getBlob(); //get the recorded soundFile's blob & store it in a variable
+
+let formdata = new FormData() ; //create a from to of data to upload to the server
+formdata.append('soundBlob', soundBlob,  'myfiletosave.wav') ; // append the sound blob and the name of the file. third argument will show up on the server as req.file.originalname
+
+  // Now we can send the blob to a server...
+var serverUrl = '/upload'; //we've made a POST endpoint on the server at /upload
+//build a HTTP POST request
+var httpRequestOptions = {
+	method: 'POST',
+	body: formdata , // with our form data packaged above
+	headers: new Headers({
+	  'enctype': 'multipart/form-data' // the enctype is important to work with multer on the server
+	})
+};
+// console.log(httpRequestOptions);
+// use p5 to make the POST request at our URL and with our options
+httpDo(
+serverUrl,
+httpRequestOptions,
+(successStatusCode)=>{ //if we were successful...
+  console.log("uploaded recording successfully: " + successStatusCode)
+},
+(error)=>{console.error(error);}
+)

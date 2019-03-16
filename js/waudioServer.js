@@ -1,3 +1,34 @@
+const express = require('express');
+const multer = require('multer');
+var path = '../Projects/uploads/aaa'
+const upload = multer({
+  dest: path // this saves your file into a directory called "uploads"
+}); 
+const fs = require('fs'); //use the file system so we can save files
+
+//Get wav file from binary only by changing name
+// var path = '/Users/felixrosatmetlla/waudio-editor/js/uploads/6e378b2afbb843ed6476e446369ea658';
+// fs.rename('/Users/felixrosatmetlla/waudio-editor/js/uploads/6e378b2afbb843ed6476e446369ea658', '/Users/felixrosatmetlla/waudio-editor/js/uploads/violin.wav', function (err) {
+//   if (err) throw err;
+//   console.log('renamed complete');
+// });
+
+const app = express();
+
+app.get('/', (req, res) => {
+  res.sendFile(__dirname + '/index.html');
+});
+
+
+// It's very crucial that the file name matches the name attribute in your html
+app.post('/', upload.single('audio'), (req, res) => {
+ 
+  res.sendStatus(200); //send back that everything went ok
+});
+
+app.listen(3000);
+
+
 // Create the HTTP Server
 var WebSocketServer = require('websocket').server;
 var http = require('http');
