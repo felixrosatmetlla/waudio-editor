@@ -1,0 +1,75 @@
+#login {
+	background-image: url("../images/background-login.png");
+	background-size: 100%;
+	background-repeat: no-repeat;
+	background-position: center;
+	background-color: black;
+	width: 100%;
+	height: 100%;
+
+	display:grid;
+	position:fixed;
+	grid-template-columns: 30% 40% 30%;
+	grid-template-rows: 30% 40% 30%;
+}
+
+.login-box{
+	grid-column: 2;
+	grid-row: 2;
+	width: 100%;
+	height: 100%;
+	position: relative;
+	background-color:#FF8B41;
+	border-radius: 12px;
+	padding: 10px;
+	float: center;
+	display: grid;
+	grid-template-columns: 20% 80%;
+	grid-template-rows: auto auto auto;
+	grid-row-gap: 10px;
+
+}
+
+.enter {
+	background-color: white;
+	border: none;
+	border-radius: 12px;
+	width: 80%;
+	margin: 0 10%;
+	grid-column: 2;
+	grid-row: 3;
+}
+
+input[type="text"] {
+	width: 80%;
+	height: 30px;
+	margin: 5% 10%; 
+}
+
+#username {
+	margin: 20% 20%;
+	grid-column: 1;
+	grid-row: 1;
+	font-size: 15px;
+}
+
+#username_input{
+	grid-column: 2;
+	grid-row: 1;
+}
+
+#project {
+	margin: 20% 20%;
+	grid-column: 1;
+	grid-row: 2;
+	font-size: 15px;
+}
+
+#project_input{
+	grid-column: 2;
+	grid-row: 2;
+}
+.input_text {
+	margin: 2.5% 10%;
+	width: 100%;
+}
