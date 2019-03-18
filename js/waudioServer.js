@@ -57,6 +57,7 @@ wsServer.on('request', function(request) {
 	
     //TODO: set user id
     var id = clients.length;
+    console.log(id);
 
     // On message received
     connection.on('message', function(message) {
@@ -68,6 +69,7 @@ wsServer.on('request', function(request) {
             var msg = JSON.parse(message.utf8Data);
 
             if (msg.type === 'user'){
+                console.log('recieved')
                 var clientObj = {
                     id: id,
                     name: msg.name,
@@ -87,7 +89,7 @@ wsServer.on('request', function(request) {
                         cuts: {},
                         gain: 0.5,
                         editor: ''
-                    } 
+                    },
                     type: 'project'
                 };
                 connection.sendUTF(JSON.stringify(project));

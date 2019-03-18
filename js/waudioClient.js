@@ -1,4 +1,4 @@
-var context = new (window.AudioContext || window.webkitAudioContext);
+var context;
 var testAudioBuffer;
 
 var fs = 44100;
@@ -17,21 +17,31 @@ var local_user = {
 	editingAudio: null
 }
 
+// Login elements
+var usernameInput = document.getElementById('username_input');
+var projectInput = document.getElementById('project_input');
+var loginForm = document.getElementsByClassName('login-box');
 
-var playButton = document.getElementByClassName('play');
 
-playButton.addEventListener('click', prepareToPlay);
+// Index elements
+var playButton = document.getElementsByClassName('play');
 
-function requestProject(){
+// playButton.addEventListener('click', prepareToPlay);
+
+// TODO on improvements: Login Validation
+loginForm.onsubmit = function requestProject(event){
+	event.preventDefault();
+	context = new (window.AudioContext || window.webkitAudioContext);
+
 	// get username value
-	var username;
+	var username = usernameInput.value;
 	var userObj = {
 		name: username,
 		type: 'user'
 	}
 
 	// get project name
-	var projectName;
+	var projectName = projectInput;
 	var projectObj = {
 		name: projectName,
 		type: 'reqProj'
@@ -305,18 +315,18 @@ function loadAudio(url){
 }
 //BufferLoader
 
-var form = document.getElementById();
-// Maybe send a message to change the audio from /tmp/
-form.onsubmit = function(event){
-	event.preventDefault();
+// var form = document.getElementById();
+// // Maybe send a message to change the audio from /tmp/
+// form.onsubmit = function(event){
+// 	event.preventDefault();
 
-	var moveToProject = {
-		audioName:'',
-		origPath:'',
-		destPath:'',
+// 	var moveToProject = {
+// 		audioName:'',
+// 		origPath:'',
+// 		destPath:'',
 
-	}
-}
+// 	}
+// }
 
 // var form = document.getElementById('file-form');
 // var fileSelect = document.getElementById('file-select');
