@@ -1,6 +1,6 @@
 const express = require('express');
 const multer = require('multer');
-var path = '../Projects/uploads/aaa'
+var path = '../Projects/tmp'
 const upload = multer({
   dest: path // this saves your file into a directory called "uploads"
 }); 
@@ -78,7 +78,16 @@ wsServer.on('request', function(request) {
 
             else if (msg.type === 'reqProj'){
                 var project = {
-                    project: projects[msg.name], 
+                    name: projects[msg.name],
+                    path: '../Projects/' + projects[msg.name],
+                    audio_0: {
+                        name: '',
+                        url: '',
+                        timeline: {}, 
+                        cuts: {},
+                        gain: 0.5,
+                        editor: ''
+                    } 
                     type: 'project'
                 };
                 connection.sendUTF(JSON.stringify(project));
