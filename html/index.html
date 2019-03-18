@@ -2,9 +2,51 @@
 <html>
 <head>
 	<title>WAUDIO-EDITOR</title>
-	<style type="text/css" src="css/style.css"></style>
+	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+	<link rel="stylesheet" type="text/css" href="../css/style.css">
+	<link rel="stylesheet" type="text/css" href="../css/bootstrap.css">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 </head>
-<body>
-Hello World!
+<body class="index">
+	<!-- ----------- HEADER ------------- -->
+	<div class="header">
+		<!--<div class="options">-->
+			<form action="/" enctype="multipart/form-data" method="post" class="options">
+					<label for="upload-audio" class="import-audio btn"> Browse...</label>
+				    <input type="file" name="audio" value="Input" id="upload-audio">
+				    <input type="submit" value="Upload" class="upload">
+			</form> 
+			
+			<!--<button class="import-audio"> Import Audio </button>-->
+			
+		<!--</div>-->
+		<div class="audio-options">
+			<button class="play fa fa-play"></button><br>
+			<button class="export btn">Export</button>
+		</div>
+	</div>
+
+	<!-- ----------- TRACKS ------------- -->
+	<div class="content">
+		<!-- TRACK 1 -->
+		<div class="track" id="track-1">
+			<div class= "track-options">
+				<p class="track-name">Track 1</p>
+
+				<div class="volume">
+					<button class=" fa fa-volume-up center-icon"></button><br>
+					<button class=" fa fa-caret-up btn-action"></button><br>
+					<button class=" fa fa-caret-down btn-action"></button>
+				</div>
+
+			</div>
+			<div class= "track-waveform">
+				<canvas id="canvas-1"></canvas>
+			</div>
+		</div>
+		<!-- END TRACK 1 -->
+
+	</div>
+
 </body>
 </html>
