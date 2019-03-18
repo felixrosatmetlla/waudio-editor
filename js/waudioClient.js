@@ -60,6 +60,70 @@ function uploadFile(){
 	
 }
 
+//Generate the Wave Image to show in the timeline
+var wave_cache = {};
+
+// Function by Javi Agenjo
+function getAudioWaveImage( url, callback, onError )
+{
+	if(wave_cache[url])
+		return wave_cache[url];
+
+	// window.AudioContext = window.AudioContext || window.webkitAudioContext;
+	// var context = ANIMED.audio_context;
+	// if(!context)
+	// 	context = ANIMED.audio_context = new AudioContext();
+
+	wave_cache[url] = 1;
+
+	var request = new XMLHttpRequest();
+	  request.open('GET', url, true);
+	  request.responseType = 'arraybuffer';
+
+	  // Decode asynchronously
+	  request.onload = function() {
+		context.decodeAudioData( request.response, function(buffer) {
+			var start_time = performance.now();
+			var canvas = document.createElement("canvas");
+			canvas.width = Math.round(buffer.duration * 120); //120 samples per second
+			canvas.height = 32;
+			document.body.appendChild(canvas);
+			var delta = (buffer.length / canvas.width);// * buffer.numberOfChannels;
+			var ctx = canvas.getContext("2d");
+			ctx.clearRect(0,0,canvas.width,canvas.height);
+			ctx.fillStyle = ctx.strokeStyle = "white";
+			var data = buffer.getChannelData(0);
+			var pos = 0;
+			var delta_ceil = Math.ceil(delta);
+			ctx.beginPath();
+			for(var i = 0; i < buffer.length; i += delta)
+			{
+				var min = 0;
+				var max = 0;
+				var start = Math.floor(i);
+				for(var j = 0; j < delta_ceil; ++j)
+				{
+					var v = data[j + start];
+					if(min > v) min = v;
+					if(max < v) max = v;
+				}
+				var y = (1 + min) * 16;
+				ctx.moveTo( pos, y );
+				ctx.lineTo( pos, y + 16 * (max - min) );
+				++pos;
+			}
+			ctx.stroke();
+			canvas.buffer = buffer;
+			wave_cache[url] = canvas;
+			console.log( "wave image generation time: " + ((performance.now() - start_time)*0.001).toFixed(3) + "s");
+		}, onError);
+	  }
+	  request.send();
+}
+
+function paintProject(buffersToPlay){
+
+}
 function loadProject(projectMsg){
 	// Save Project state
 	projectState = projectMsg;
@@ -241,80 +305,91 @@ function loadAudio(url){
 }
 //BufferLoader
 
-
-
-var form = document.getElementById('file-form');
-var fileSelect = document.getElementById('file-select');
-var uploadButton = document.getElementById('upload-button');
-
-form.onsubmit = function(event) {
+var form = document.getElementById();
+// Maybe send a message to change the audio from /tmp/
+form.onsubmit = function(event){
 	event.preventDefault();
 
-	// Update button text.
-	uploadButton.innerHTML = 'Uploading...';
+	var moveToProject = {
+		audioName:'',
+		origPath:'',
+		destPath:'',
 
-	// Get the selected files from the input.
-	var files = fileSelect.files;
-
-	// Create a new FormData object.
-	var formData = new FormData();
-
-	// Loop through each of the selected files.
-	for (var i = 0; i < files.length; i++) {
-		var file = files[i];
-
-		// Check the file type.
-		if (!file.type.match('image.*')) {
-			continue;
-		}
-
-		// Add the file to the request.
-		formData.append('audios[]', file, file.name);
 	}
-
-	// Set up the request.
-	var request = new XMLHttpRequest();
-
-	// Open the connection.
-	request.open('POST', '/Upload', true);
-
-	// Set up a handler for when the request finishes.
-	request.onload = function () {
-		if (request.status === 200) {
-		// File(s) uploaded.
-			uploadButton.innerHTML = 'Upload';
-		} 
-		else {
-			alert('An error occurred!');
-		}
-	};
-
-	// Send the Data.
-	request.send(formData);
 }
 
-let soundBlob = soundFile.getBlob(); //get the recorded soundFile's blob & store it in a variable
+// var form = document.getElementById('file-form');
+// var fileSelect = document.getElementById('file-select');
+// var uploadButton = document.getElementById('upload-button');
 
-let formdata = new FormData() ; //create a from to of data to upload to the server
-formdata.append('soundBlob', soundBlob,  'myfiletosave.wav') ; // append the sound blob and the name of the file. third argument will show up on the server as req.file.originalname
+// form.onsubmit = function(event) {
+// 	event.preventDefault();
 
-  // Now we can send the blob to a server...
-var serverUrl = '/upload'; //we've made a POST endpoint on the server at /upload
-//build a HTTP POST request
-var httpRequestOptions = {
-	method: 'POST',
-	body: formdata , // with our form data packaged above
-	headers: new Headers({
-	  'enctype': 'multipart/form-data' // the enctype is important to work with multer on the server
-	})
-};
-// console.log(httpRequestOptions);
-// use p5 to make the POST request at our URL and with our options
-httpDo(
-serverUrl,
-httpRequestOptions,
-(successStatusCode)=>{ //if we were successful...
-  console.log("uploaded recording successfully: " + successStatusCode)
-},
-(error)=>{console.error(error);}
-)
+// 	// Update button text.
+// 	uploadButton.innerHTML = 'Uploading...';
+
+// 	// Get the selected files from the input.
+// 	var files = fileSelect.files;
+
+// 	// Create a new FormData object.
+// 	var formData = new FormData();
+
+// 	// Loop through each of the selected files.
+// 	for (var i = 0; i < files.length; i++) {
+// 		var file = files[i];
+
+// 		// Check the file type.
+// 		if (!file.type.match('image.*')) {
+// 			continue;
+// 		}
+
+// 		// Add the file to the request.
+// 		formData.append('audios[]', file, file.name);
+// 	}
+
+// 	// Set up the request.
+// 	var request = new XMLHttpRequest();
+
+// 	// Open the connection.
+// 	request.open('POST', '/Upload', true);
+
+// 	// Set up a handler for when the request finishes.
+// 	request.onload = function () {
+// 		if (request.status === 200) {
+// 		// File(s) uploaded.
+// 			uploadButton.innerHTML = 'Upload';
+// 		} 
+// 		else {
+// 			alert('An error occurred!');
+// 		}
+// 	};
+
+// 	// Send the Data.
+// 	request.send(formData);
+// }
+
+// let soundBlob = soundFile.getBlob(); //get the recorded soundFile's blob & store it in a variable
+
+// let formdata = new FormData() ; //create a from to of data to upload to the server
+// formdata.append('soundBlob', soundBlob,  'myfiletosave.wav') ; // append the sound blob and the name of the file. third argument will show up on the server as req.file.originalname
+
+//   // Now we can send the blob to a server...
+// var serverUrl = '/upload'; //we've made a POST endpoint on the server at /upload
+// //build a HTTP POST request
+// var httpRequestOptions = {
+// 	method: 'POST',
+// 	body: formdata , // with our form data packaged above
+// 	headers: new Headers({
+// 	  'enctype': 'multipart/form-data' // the enctype is important to work with multer on the server
+// 	})
+// };
+// // console.log(httpRequestOptions);
+// // use p5 to make the POST request at our URL and with our options
+// httpDo(
+// serverUrl,
+// httpRequestOptions,
+// (successStatusCode)=>{ //if we were successful...
+//   console.log("uploaded recording successfully: " + successStatusCode)
+// },
+// (error)=>{console.error(error);}
+// )
