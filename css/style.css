@@ -1,7 +1,8 @@
 .index{
 	background-color: #DEDEDE;
 	position: relative;
-	display: none;
+	height: 100%;
+	display: none; /*none->block*/
 }
 
 /*---------------------------- HEADER ------------------------------ */
