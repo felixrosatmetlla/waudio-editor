@@ -25,6 +25,34 @@
 		<div class="audio-options">
 			<button class="play fa fa-play"></button><br>
 			<button class="export btn">Export</button>
+			
+			<!-- *****************************MOVE************************************-->
+			
+			<div class="move">
+				<div id="text">
+					<strong>Clip:<br>
+					Move to:</strong>
+				</div>
+				<div id="num_input">
+					<input type="text" name="clip_to_move" class="header_input"> <br>
+					<input type="text" name="position_to_move" class="header_input">		
+				</div>
+				<button class="btn btnMove">MOVE</button>
+			</div>
+
+			<!-- *****************************CUT*************************************-->
+
+			<div class="cut">
+				<div id="text">
+					<strong>Clip:<br>
+					Cut on:</strong>
+				</div>
+				<div id="num_input">
+					<input type="text" name="clip_to_cut" class="header_input"> <br>
+					<input type="text" name="position_to_cut" class="header_input">		
+				</div>
+				<button class="btn btnCut">CUT</button>
+			</div>
 		</div>
 	</div>
 
@@ -45,6 +73,7 @@
 			<div class= "track-waveform">
 				<canvas id="canvas-1"></canvas>
 			</div>
+			<button class=" btn user-selected" id="selection-1" value="FREE"></button>
 		</div>
 		<!-- END TRACK 1 -->
 

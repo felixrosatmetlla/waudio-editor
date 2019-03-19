@@ -7,7 +7,7 @@
 .header {
 	background-color: #FF8B41;
 	padding:10px;
-	min-height: 100px;
+	min-height: 110px;
 	max-height: 100px;
 	display: grid;
 	grid-template-columns: 15% auto;
@@ -68,12 +68,49 @@
 
 .audio-options{
 	display: grid;
-	grid-template-columns: 100px;
+	grid-template-columns: 100px auto auto;
 	grid-template-rows: 35px 35px;
 	width: 100%;
 
 	grid-column-gap: 15px;
  	grid-row-gap: 5px;
+}
+
+.move {
+	grid-row-start: 1;
+	grid-row-end: 3;
+	grid-column: 2;
+	display: grid;
+	grid-template-columns: auto auto;
+}
+
+.cut {
+	grid-row-start: 1;
+	grid-row-end: 3;
+	grid-column: 3;
+	display: grid;
+	grid-template-columns: auto auto;
+}
+
+#text {
+	grid-column: 1;
+}
+
+#num_input {
+	grid-column: 2;
+}
+
+.btnMove, .btnCut {
+	grid-column-start: 1;
+	grid-column-end: 3;
+	background-color: white;
+	margin: 2.5px 0;
+
+}
+.header_input{
+	height: 20px;
+	width: 100%;
+	margin: 2.5px;
 }
 
 /*---------------------------- CONTENT ----------------------------- */
