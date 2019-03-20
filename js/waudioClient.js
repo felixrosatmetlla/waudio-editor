@@ -18,19 +18,25 @@ var local_user = {
 }
 
 // Login elements
-var usernameInput = document.getElementById('username_input');
-var projectInput = document.getElementById('project_input');
-var loginForm = document.getElementsByClassName('login-box');
+var loginBox = document.querySelector('.login-box');
+var editorPage = document.querySelector('.index');
 
+var usernameInput = document.querySelector('#username_input');
+var projectInput = document.querySelector('#project_input');
+var loginButton = document.querySelector('.btn_enter');
+
+loginButton.addEventListener('click', requestProject);
 
 // Index elements
-var playButton = document.getElementsByClassName('play');
+var playButton = document.querySelector('.play');
 
 // playButton.addEventListener('click', prepareToPlay);
 
 // TODO on improvements: Login Validation
-loginForm.onsubmit = function requestProject(event){
-	event.preventDefault();
+function requestProject(){
+	hideLogin();
+	showEditor();
+	
 	context = new (window.AudioContext || window.webkitAudioContext);
 
 	// get username value
@@ -313,6 +319,17 @@ function loadAudio(url){
 	}
 	request.send();
 }
+
+//Function to display chat
+function showEditor(){ // Change display style to grid
+	editorPage.style.display = "grid"; 
+}
+
+//Function to hide login
+function hideLogin(){ // Change display style as none to hide it
+	loginBox.style.display = "none"; 
+}
+
 //BufferLoader
 
 // var form = document.getElementById();
