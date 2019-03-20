@@ -3,7 +3,8 @@ var testAudioBuffer;
 
 var fs = 44100;
 // Create new server object
-var socket = new WebSocket("ws://localhost:9023/");
+// var socket = new WebSocket("ws://localhost:9023/");
+var socket = new WebSocket("ws://ecv-etic.upf.edu:9023/");
 
 var buffers = [];
 var projectState = [];
@@ -153,8 +154,8 @@ function loadProject(projectMsg){
 	}
 	else{
 		for(var audio in projectMsg.audios){
-		loadAudio(projectMsg.audios[audio].url);
-		console.log(buffers);
+			loadAudio(projectMsg.audios[audio].url);
+			console.log(buffers);
 		}
 
 		// Create buffers from audios
@@ -315,17 +316,36 @@ function increaseGain(){
 	socket.send(JSON.stringify(gainMsg));
 }
 
-
+function createCORSRequest(method, url) {
+  var xhr = new XMLHttpRequest();
+  if ("withCredentials" in xhr) {
+    // XHR for Chrome/Firefox/Opera/Safari.
+    xhr.open(method, url, true);
+    xhr.responseType = 'arraybuffer';
+  } else if (typeof XDomainRequest != "undefined") {
+    // XDomainRequest for IE.
+    xhr = new XDomainRequest();
+    xhr.open(method, url);
+    xhr.responseType = 'arraybuffer';
+  } else {
+    // CORS not supported.
+    xhr = null;
+  }
+  return xhr;
+}
 
 function loadAudio(url){
-	var request = new XMLHttpRequest();
-	request.open('GET', url, true);
-	request.responseType = 'arraybuffer';
+	// var request = new XMLHttpRequest();
+	var request = createCORSRequest('GET', url);
+	// request.open('GET', url, true);
+	// request.responseType = 'arraybuffer';
 
 	request.onload = function() {
 		context.decodeAudioData(request.response, function(buffer) {
 			buffers.push(buffer);
-		}, onError);
+		}, function onError(){
+			console.log('error');
+		});
 	}
 	request.send();
 }

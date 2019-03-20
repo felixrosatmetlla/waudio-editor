@@ -85,7 +85,8 @@ wsServer.on('request', function(request) {
                         audios:[
                             {
                                 name: 'Migrabacion2.wav',
-                                url: "C:/Users/Felix/Desktop/waudio-editor/Projects/TestProject1",
+                                // url: "C:/Users/Felix/Desktop/waudio-editor/Projects/Projects/TestProject1/Migrabacion2.wav",
+                                url: "http://ecv-etic.upf.edu/students/2019/farora/waudio-editor/Projects/TestProject1/Migrabacion2.wav",
                                 timeline: {}, 
                                 cuts: {},
                                 gain: 0.5,
