@@ -18,7 +18,7 @@ var local_user = {
 }
 
 // Login elements
-var loginBox = document.querySelector('.login-box');
+var loginBox = document.querySelector('.login');
 var editorPage = document.querySelector('.index');
 
 var usernameInput = document.querySelector('#username_input');
