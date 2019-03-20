@@ -18,7 +18,7 @@ var local_user = {
 }
 
 // Login elements
-var loginBox = document.querySelector('.login');
+var loginPage = document.querySelector('.login');
 var editorPage = document.querySelector('.index');
 
 var usernameInput = document.querySelector('#username_input');
@@ -337,7 +337,7 @@ function showEditor(){ // Change display style to grid
 
 //Function to hide login
 function hideLogin(){ // Change display style as none to hide it
-	loginBox.style.display = "none"; 
+	loginPage.style.display = "none"; 
 }
 
 //BufferLoader
