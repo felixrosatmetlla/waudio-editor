@@ -69,29 +69,34 @@ wsServer.on('request', function(request) {
             var msg = JSON.parse(message.utf8Data);
 
             if (msg.type === 'user'){
-                console.log('recieved')
                 var clientObj = {
                     id: id,
                     name: msg.name,
                     connection: connection
-                }
+                };
                 clients.push(clientObj);
             }
 
             else if (msg.type === 'reqProj'){
-                var project = {
-                    name: projects[msg.name],
-                    path: '../Projects/' + projects[msg.name],
-                    audio_0: {
-                        name: '',
-                        url: '',
-                        timeline: {}, 
-                        cuts: {},
-                        gain: 0.5,
-                        editor: ''
-                    },
-                    type: 'project'
-                };
+                if(projects[msg.name] === undefined){
+                    var project = {
+                        name: msg.name,
+                        path: '../Projects/' + msg.name,
+                        // audio_0: {
+                        //     name: '',
+                        //     url: '',
+                        //     timeline: {}, 
+                        //     cuts: {},
+                        //     gain: 0.5,
+                        //     editor: ''
+                        // },
+                        type: 'project'
+                    };
+                    projects[msg.name] = project;
+                }
+                else{
+                    var project = projects[msg.name];
+                }
                 connection.sendUTF(JSON.stringify(project));
             }
 

@@ -36,7 +36,7 @@ var playButton = document.querySelector('.play');
 function requestProject(){
 	hideLogin();
 	showEditor();
-	
+
 	context = new (window.AudioContext || window.webkitAudioContext);
 
 	// get username value
@@ -47,7 +47,7 @@ function requestProject(){
 	}
 
 	// get project name
-	var projectName = projectInput;
+	var projectName = projectInput.value;
 	var projectObj = {
 		name: projectName,
 		type: 'reqProj'
@@ -58,17 +58,19 @@ function requestProject(){
 }
 
 socket.onmessage = function(msg){
-	if (msg.type === 'project'){
-		loadProject(msg);
+	obj_msg = JSON.parse(msg.data);
+
+	if (obj_msg.type === 'project'){
+		loadProject(msg.data);
 	}
-	else if (msg.type === 'moveAudio'){
+	else if (obj_msg.type === 'moveAudio'){
 
 	}
-	else if (msg.type === 'cutAudio'){
+	else if (obj_msg.type === 'cutAudio'){
 
 	}
-	else if (msg.type === 'volumeChange'){
-		changeGain(msg.gain, msg.audio);
+	else if (obj_msg.type === 'volumeChange'){
+		changeGain(msg.data.gain, msg.data.audio);
 	}
 }
 
@@ -143,10 +145,11 @@ function paintProject(buffersToPlay){
 function loadProject(projectMsg){
 	// Save Project state
 	projectState = projectMsg;
-
+	console.log(projectState);
 	// Load Audios needed
 	for(var audio in projectMsg){
 		loadAudio(projectMsg[audio].url);
+		console.log(buffers);
 	}
 
 	// Create buffers from audios
