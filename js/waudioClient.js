@@ -57,11 +57,11 @@ function requestProject(){
 	socket.send(JSON.stringify(projectObj));
 }
 
-socket.onmessage = function(msg){
-	obj_msg = JSON.parse(msg.data);
+socket.onmessage = function(message){
+	obj_msg = JSON.parse(message.data);
 
 	if (obj_msg.type === 'project'){
-		loadProject(msg.data);
+		loadProject(obj_msg);
 	}
 	else if (obj_msg.type === 'moveAudio'){
 
@@ -70,7 +70,7 @@ socket.onmessage = function(msg){
 
 	}
 	else if (obj_msg.type === 'volumeChange'){
-		changeGain(msg.data.gain, msg.data.audio);
+		// changeGain(obj_msg.data.gain, obj_msg.data.audio);
 	}
 }
 
@@ -145,32 +145,39 @@ function paintProject(buffersToPlay){
 function loadProject(projectMsg){
 	// Save Project state
 	projectState = projectMsg;
-	console.log(projectState);
+	console.log(projectState.audios);
+	console.log(projectState['audios']);
 	// Load Audios needed
-	for(var audio in projectMsg){
-		loadAudio(projectMsg[audio].url);
+	if(projectState['audios'] === undefined){
+		console.log('no load');
+	}
+	else{
+		for(var audio in projectMsg.audios){
+		loadAudio(projectMsg.audios[audio].url);
 		console.log(buffers);
-	}
-
-	// Create buffers from audios
-	for(var audio in projectMsg){
-		for(var times in projectMsg[audio].cutTimes){	
-			var originalBuffer = buffers[getAudioIndex(audio)];
-			console.log(projectMsg[audio].cutTimes[times])
-			var length = projectMsg[audio].cutTimes[times].end - projectMsg[audio].cutTimes[times].begin;
-			var emptyBuffer = context.createBuffer(1, length, 44100);
-
-			for (var i = projectMsg[audio].cutTimes[times].begin, len = projectMsg[audio].cutTimes[times].end, j=0; i < len; i++, j++) {
-		        emptyBuffer[j] = originalBuffer[i];
-		    }
-		    buffersToPlay.push(emptyBuffer);
-		    timelinesToPlay.push(projectMsg[audio].timeline[times])
-		    gain.push(projectMsg[audio].gain)
 		}
-	}
 
-	// Read Msg to set actual state of project in screen
-	// Paint
+		// Create buffers from audios
+		for(var audio in projectMsg.audios){
+			for(var times in projectMsg.audios[audio].cutTimes){	
+				var originalBuffer = buffers[getAudioIndex(audio)];
+				console.log(projectMsg.audios[audio].cutTimes[times])
+				var length = projectMsg.audios[audio].cutTimes[times].end - projectMsg.audios[audio].cutTimes[times].begin;
+				var emptyBuffer = context.createBuffer(1, length, 44100);
+
+				for (var i = projectMsg.audios[audio].cutTimes[times].begin, len = projectMsg.audios[audio].cutTimes[times].end, j=0; i < len; i++, j++) {
+			        emptyBuffer[j] = originalBuffer[i];
+			    }
+			    buffersToPlay.push(emptyBuffer);
+			    timelinesToPlay.push(projectMsg.audios[audio].timeline[times])
+			    gain.push(projectMsg.audios[audio].gain)
+			}
+		}
+
+		// Read Msg to set actual state of project in screen
+		// Paint
+	}
+	
 }
 
 function getAudioIndex(audioName){

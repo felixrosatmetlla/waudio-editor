@@ -82,14 +82,17 @@ wsServer.on('request', function(request) {
                     var project = {
                         name: msg.name,
                         path: '../Projects/' + msg.name,
-                        // audio_0: {
-                        //     name: '',
-                        //     url: '',
-                        //     timeline: {}, 
-                        //     cuts: {},
-                        //     gain: 0.5,
-                        //     editor: ''
-                        // },
+                        audios:[
+                            {
+                                name: 'Migrabacion2.wav',
+                                url: "C:/Users/Felix/Desktop/waudio-editor/Projects/TestProject1",
+                                timeline: {}, 
+                                cuts: {},
+                                gain: 0.5,
+                                editor: ''
+                        }],
+                        
+                        
                         type: 'project'
                     };
                     projects[msg.name] = project;
