@@ -6,7 +6,7 @@ var fs = 44100;
 // var socket = new WebSocket("ws://localhost:9023/");
 var socket = new WebSocket("ws://ecv-etic.upf.edu:9023/");
 
-var buffers = {};
+var buffers = [];
 var projectState = [];
 var buffersToPlay = [{}];
 var timelinesToPlay = [];
@@ -154,6 +154,7 @@ function loadProject(projectMsg){
 	else{
 		projectMsg.audios.map((x,index) => {
 			loadAudio(projectMsg.audios[index].url,x, index);
+			paintProject(buffersToPlay);
 		})
 		
 		// tRY TO AVOID SO MANY GLOBAL VARIABLES
@@ -182,7 +183,7 @@ function loadAudio(url,audio, index){
 	request.onload = function() {
 		context.decodeAudioData(request.response).then(function(buffer) {
 			var data = buffer.getChannelData(0);
-			console.log(data);
+			console.log(index);
 			
 			if(audio['cuts'] !== undefined){
 				// Create buffers from audios
@@ -200,6 +201,16 @@ function loadAudio(url,audio, index){
 				    dummyBuffer.copyToChannel(emptyBuffer,0,0);
 				    buffersToPlay[index][ind]=dummyBuffer;
 				})
+			}
+			else{
+
+				var length = data.length;
+				var dummyBuffer = context.createBuffer(1, length, 44100);
+				dummyBuffer.copyToChannel(data,0,0);
+				console.log(dummyBuffer)
+				buffersToPlay[index] = {};
+			    buffersToPlay[index][0]=dummyBuffer;
+			    console.log(buffersToPlay)
 
 			}
 			buffers[index]=data;
