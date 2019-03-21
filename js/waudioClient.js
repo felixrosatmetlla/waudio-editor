@@ -6,9 +6,9 @@ var fs = 44100;
 // var socket = new WebSocket("ws://localhost:9023/");
 var socket = new WebSocket("ws://ecv-etic.upf.edu:9023/");
 
-var buffers = [];
+var buffers = {};
 var projectState = [];
-var buffersToPlay = [];
+var buffersToPlay = [{}];
 var timelinesToPlay = [];
 var gain = [];
 
@@ -147,38 +147,67 @@ function loadProject(projectMsg){
 	// Save Project state
 	projectState = projectMsg;
 	console.log(projectState.audios);
-	console.log(projectState['audios']);
 	// Load Audios needed
 	if(projectState['audios'] === undefined){
 		console.log('no load');
 	}
 	else{
-		for(var audio in projectMsg.audios){
-			loadAudio(projectMsg.audios[audio].url);
-			console.log(buffers);
-		}
+		projectMsg.audios.map((x,index) => {
+			loadAudio(projectMsg.audios[index].url,x, index);
+		})
+		
+		// tRY TO AVOID SO MANY GLOBAL VARIABLES
+		// for(var audio in projectMsg.audios){
+			
+			
+		// 	gain.push(projectMsg.audios[audio].gain)
+		// 	timelinesToPlay.push(projectMsg.audios[audio].timeline)
+		// }
 
-		// Create buffers from audios
-		for(var audio in projectMsg.audios){
-			for(var times in projectMsg.audios[audio].cutTimes){	
-				var originalBuffer = buffers[getAudioIndex(audio)];
-				console.log(projectMsg.audios[audio].cutTimes[times])
-				var length = projectMsg.audios[audio].cutTimes[times].end - projectMsg.audios[audio].cutTimes[times].begin;
-				var emptyBuffer = context.createBuffer(1, length, 44100);
-
-				for (var i = projectMsg.audios[audio].cutTimes[times].begin, len = projectMsg.audios[audio].cutTimes[times].end, j=0; i < len; i++, j++) {
-			        emptyBuffer[j] = originalBuffer[i];
-			    }
-			    buffersToPlay.push(emptyBuffer);
-			    timelinesToPlay.push(projectMsg.audios[audio].timeline[times])
-			    gain.push(projectMsg.audios[audio].gain)
-			}
-		}
+		
+		
 
 		// Read Msg to set actual state of project in screen
 		// Paint
 	}
 	
+}
+
+function loadAudio(url,audio, index){
+	// var request = new XMLHttpRequest();
+	var request = createCORSRequest('GET', url);
+	// request.open('GET', url, true);
+	// request.responseType = 'arraybuffer';
+
+	request.onload = function() {
+		context.decodeAudioData(request.response).then(function(buffer) {
+			var data = buffer.getChannelData(0);
+			console.log(data);
+			
+			if(audio['cuts'] !== undefined){
+				// Create buffers from audios
+				audio.cuts.map((x,ind)=>{
+					var length = x.end - x.begin;
+					var emptyBuffer = new Float32Array(length);
+					var dummyBuffer = context.createBuffer(1, length, 44100);
+					
+				    
+
+					for (var i = x.begin, j=0; i < x.end; i++, j++) {
+				        var aux = data[i]
+				        emptyBuffer[j] = aux;
+				    }
+				    dummyBuffer.copyToChannel(emptyBuffer,0,0);
+				    buffersToPlay[index][ind]=dummyBuffer;
+				})
+
+			}
+			buffers[index]=data;
+		}, function onError(){
+			console.log('error');
+		});
+	}
+	request.send();
 }
 
 function getAudioIndex(audioName){
@@ -334,21 +363,6 @@ function createCORSRequest(method, url) {
   return xhr;
 }
 
-function loadAudio(url){
-	// var request = new XMLHttpRequest();
-	var request = createCORSRequest('GET', url);
-	// request.open('GET', url, true);
-	// request.responseType = 'arraybuffer';
-
-	request.onload = function() {
-		context.decodeAudioData(request.response, function(buffer) {
-			buffers.push(buffer);
-		}, function onError(){
-			console.log('error');
-		});
-	}
-	request.send();
-}
 
 //Function to display chat
 function showEditor(){ // Change display style to grid

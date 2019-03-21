@@ -88,10 +88,19 @@ wsServer.on('request', function(request) {
                                 // url: "C:/Users/Felix/Desktop/waudio-editor/Projects/Projects/TestProject1/Migrabacion2.wav",
                                 url: "http://ecv-etic.upf.edu/students/2019/farora/waudio-editor/Projects/TestProject1/Migrabacion2.wav",
                                 timeline: {}, 
-                                cuts: {},
+                                cuts: [{begin: 50000 , end: 60000}],
                                 gain: 0.5,
                                 editor: ''
-                        }],
+                        },{
+                                name: 'Migrabacion2.wav',
+                                // url: "C:/Users/Felix/Desktop/waudio-editor/Projects/Projects/TestProject1/Migrabacion2.wav",
+                                url: "http://ecv-etic.upf.edu/students/2019/farora/waudio-editor/Projects/TestProject1/Migrabacion2.wav",
+                                // timeline: {}, 
+                                // cuts: {},
+                                gain: 0.5,
+                                editor: ''
+                        }
+                        ],
                         
                         
                         type: 'project'
