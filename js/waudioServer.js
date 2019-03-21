@@ -82,9 +82,11 @@ wsServer.on('request', function(request) {
                     var project = {
                         name: msg.name,
                         path: '../Projects/' + msg.name,
+                        size: 430496,
                         audios:[
                             {
                                 name: 'Migrabacion2.wav',
+                                //Track Name?
                                 // url: "C:/Users/Felix/Desktop/waudio-editor/Projects/Projects/TestProject1/Migrabacion2.wav",
                                 url: "http://ecv-etic.upf.edu/students/2019/farora/waudio-editor/Projects/TestProject1/Migrabacion2.wav",
                                 timeline: {}, 
@@ -101,8 +103,6 @@ wsServer.on('request', function(request) {
                                 editor: ''
                         }
                         ],
-                        
-                        
                         type: 'project'
                     };
                     projects[msg.name] = project;

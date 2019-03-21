@@ -8,7 +8,7 @@ var socket = new WebSocket("ws://ecv-etic.upf.edu:9023/");
 
 var buffers = [];
 var projectState = [];
-var buffersToPlay = [{}];
+var buffersToPlay = [[]];
 var timelinesToPlay = [];
 var gain = [];
 
@@ -26,6 +26,7 @@ var usernameInput = document.querySelector('#username_input');
 var projectInput = document.querySelector('#project_input');
 var loginButton = document.querySelector('.btn_enter');
 
+var trackContainer = document.querySelector('.content')
 loginButton.addEventListener('click', requestProject);
 
 // Index elements
@@ -139,14 +140,98 @@ function getAudioWaveImage( url, callback, onError )
 	  }
 	  request.send();
 }
+function paintWaveform(clip, index){
+	console.log(clip);
+	var canvasContainer = document.querySelector('.track-waveform')
+	var waveCanvas = document.createElement("canvas");
+	waveCanvas.id = "canvas-"+index;
+	waveCanvas.width = Math.round(clip.duration * 120); //120 samples per second
+	waveCanvas.height = 150;
+	canvasContainer.appendChild(waveCanvas);
 
-function paintProject(buffersToPlay){
+	var delta = (clip.length / waveCanvas.width);// * clip.numberOfChannels;
+	var ctx = waveCanvas.getContext("2d");
+	ctx.clearRect(0,0,waveCanvas.width,waveCanvas.height);
+	ctx.fillStyle = ctx.strokeStyle = "black";
 
+	var data = clip.getChannelData(0);
+	var pos = 0;
+	var delta_ceil = Math.ceil(delta);
+	ctx.beginPath();
+	for(var i = 0; i < clip.length; i += delta)
+	{
+		var min = 0;
+		var max = 0;
+		var start = Math.floor(i);
+		for(var j = 0; j < delta_ceil; ++j)
+		{
+			var v = data[j + start];
+			if(min > v) min = v;
+			if(max < v) max = v;
+		}
+		var y = (1 + min) * 16;
+		ctx.moveTo( pos, y );
+		ctx.lineTo( pos, y + 16 * (max - min) );
+		++pos;
+	}
+	ctx.stroke();
+	waveCanvas.clip = clip;
 }
+
+//Fiund a way to do it and paint it
+function paintProject(buffersToPlay){
+	console.log(buffersToPlay)
+	buffersToPlay.map((audio,index) => {
+		trackElements(index);
+		console.log(audio);
+		console.log(audio.keys())
+		console.log(audio.values())
+		audio.map((clip,id)=>{
+			console.log(buffersToPlay[index][id])
+			paintWaveform(clip,index);
+		})
+
+	})
+}
+function trackElements(index){
+	var trackDiv = document.createElement("div");
+	trackDiv.className = "track";
+	trackDiv.id = "track-"+index;
+	trackContainer.appendChild(trackDiv);
+
+	var trackOptDiv = document.createElement("div");
+	trackOptDiv.className = "track-options";
+	trackDiv.appendChild(trackOptDiv);
+
+	var trackName = document.createElement("p");
+	trackName.className = "track-name";
+	trackName.innerHTML = "Track " + index;
+	trackOptDiv.appendChild(trackName);
+
+	var volumeDiv = document.createElement("div");
+	volumeDiv.className = "volume";
+	trackOptDiv.appendChild(volumeDiv);
+
+	var volumeButtn = document.createElement("button");
+	volumeButtn.className = " fa fa-volume-up center-icon";
+	volumeDiv.appendChild(volumeButtn);
+
+	var volumeUpButtn = document.createElement("button");
+	volumeUpButtn.className = " fa fa-caret-up btn-action";
+	volumeDiv.appendChild(volumeUpButtn);
+
+	var volumeDownButtn = document.createElement("button");
+	volumeDownButtn.className = " fa fa-caret-down btn-action";
+	volumeDiv.appendChild(volumeDownButtn);
+	
+	var trackWaveDiv = document.createElement("div");
+	trackWaveDiv.className = "track-waveform";
+	trackDiv.appendChild(trackWaveDiv);
+}
+
 function loadProject(projectMsg){
 	// Save Project state
 	projectState = projectMsg;
-	console.log(projectState.audios);
 	// Load Audios needed
 	if(projectState['audios'] === undefined){
 		console.log('no load');
@@ -154,8 +239,8 @@ function loadProject(projectMsg){
 	else{
 		projectMsg.audios.map((x,index) => {
 			loadAudio(projectMsg.audios[index].url,x, index);
-			paintProject(buffersToPlay);
 		})
+		paintProject(buffersToPlay);
 		
 		// tRY TO AVOID SO MANY GLOBAL VARIABLES
 		// for(var audio in projectMsg.audios){
@@ -183,7 +268,6 @@ function loadAudio(url,audio, index){
 	request.onload = function() {
 		context.decodeAudioData(request.response).then(function(buffer) {
 			var data = buffer.getChannelData(0);
-			console.log(index);
 			
 			if(audio['cuts'] !== undefined){
 				// Create buffers from audios
@@ -207,11 +291,8 @@ function loadAudio(url,audio, index){
 				var length = data.length;
 				var dummyBuffer = context.createBuffer(1, length, 44100);
 				dummyBuffer.copyToChannel(data,0,0);
-				console.log(dummyBuffer)
-				buffersToPlay[index] = {};
+				buffersToPlay[index] = [];
 			    buffersToPlay[index][0]=dummyBuffer;
-			    console.log(buffersToPlay)
-
 			}
 			buffers[index]=data;
 		}, function onError(){
