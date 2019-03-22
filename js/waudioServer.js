@@ -130,6 +130,8 @@ wsServer.on('request', function(request) {
             }
 
             else if(msg.type === 'gainChange'){
+                console.log(msg);
+                
                 //TODO:Process data in own world
                 //TODO: Send Message
             }
