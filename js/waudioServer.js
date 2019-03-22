@@ -5,6 +5,7 @@ const upload = multer({
   dest: path // this saves your file into a directory called "uploads"
 }); 
 const fs = require('fs'); //use the file system so we can save files
+const cors = require('cors')
 
 //Get wav file from binary only by changing name
 // var path = '/Users/felixrosatmetlla/waudio-editor/js/uploads/6e378b2afbb843ed6476e446369ea658';
@@ -14,16 +15,21 @@ const fs = require('fs'); //use the file system so we can save files
 // });
 
 const app = express();
-
-app.get('/', (req, res) => {
-  res.sendFile(__dirname + '/index.html');
+app.use(express.static('/home/farora/www/waudio-editor/'));
+app.use(function(req, res, next) {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  next();
+});
+app.get('/',(req, res) => {
+  res.sendFile('/home/farora/www/waudio-editor/html' + '/index.html');
 });
 
 
 // It's very crucial that the file name matches the name attribute in your html
 app.post('/', upload.single('audio'), (req, res) => {
- 
-  res.sendStatus(200); //send back that everything went ok
+    console.log(req);
+  // res.sendStatus(200); //send back that everything went ok
 });
 
 app.listen(3000);
@@ -89,7 +95,7 @@ wsServer.on('request', function(request) {
                                 //Track Name?
                                 // url: "C:/Users/Felix/Desktop/waudio-editor/Projects/Projects/TestProject1/Migrabacion2.wav",
                                 url: "http://ecv-etic.upf.edu/students/2019/farora/waudio-editor/Projects/TestProject1/Migrabacion2.wav",
-                                timeline: {}, 
+                                timeline: [{begin:50000, end: 60000}, {begin:2000, end:3000}], 
                                 cuts: [{begin: 50000 , end: 60000},{begin: 2000, end:3000}],
                                 gain: 0.5,
                                 editor: ''
@@ -97,7 +103,7 @@ wsServer.on('request', function(request) {
                                 name: 'Migrabacion2.wav',
                                 // url: "C:/Users/Felix/Desktop/waudio-editor/Projects/Projects/TestProject1/Migrabacion2.wav",
                                 url: "http://ecv-etic.upf.edu/students/2019/farora/waudio-editor/Projects/TestProject1/Migrabacion2.wav",
-                                // timeline: {}, 
+                                timeline: [{begin:0, end: 430496}], 
                                 // cuts: {},
                                 gain: 0.5,
                                 editor: ''

@@ -30,9 +30,6 @@ var trackContainer = document.querySelector('.content')
 loginButton.addEventListener('click', requestProject);
 
 // Index elements
-var playButton = document.querySelector('.play');
-
-// playButton.addEventListener('click', prepareToPlay);
 
 // TODO on improvements: Login Validation
 function requestProject(){
@@ -186,10 +183,10 @@ function paintProject(buffersToPlay){
 		console.log(audio);
 		console.log(audio.keys())
 		console.log(audio.values())
-		audio.map((clip,id)=>{
-			console.log(buffersToPlay[index][id])
-			paintWaveform(clip,index);
-		})
+		// audio.map((clip,id)=>{
+		// 	console.log(buffersToPlay[index][id])
+		// 	paintWaveform(clip,index);
+		// })
 
 	})
 }
@@ -361,8 +358,13 @@ function cutAudio(){
 }
 
 function timeToSample(time){
-	sample = time/fs;
+	var sample = time/fs;
 	return sample
+}
+
+function sampleToTime(sample){
+	var time =sample*fs;
+	return time;
 }
 
 // function processProjectChanges(){
@@ -379,23 +381,40 @@ function moveAudio(){
 	//Access the correct timeline audio clip position
 }
 
+var playButton = document.querySelector('.play fa fa-play');
+playButton.addEventListener('click', prepareToPlay);
+
 function prepareToPlay(){ //Function that prepares the buffers to play them in time and order
 	//TODO: Get timelines and gain to play here and delete global variable
-	var gain = [];
-	for(i = 0; i<buffersToPlay.length; i++){
-		playAudio(buffersToPlay[i], timelinesToPlay[i], gain[i]);
-	}
+	var gains = [];
+	var timelines = [[]];
+	projectState.audios.map((audio,index)=>{
+		gain[index] = audio.gain;
+		audio.timeline.map((time,ind) => {
+			timelines[index][ind] = time;
+		})
+	})
+	console.log(gains);
+	console.log(timelines);
+
+	buffersToPlay.map((track, index) =>{
+		track.map((buffer,ind)=>{
+			playAudio(buffer, timelines[index][ind], gains[index]);
+		})
+	})
 }
 
 function playAudio(buffer, timeline, gain){
+	var beginTime = sampleToTime(timeline.begin)
+	var endTime = sampleToTime(timeline.end)
 	var source = context.createBufferSource();
 	source.buffer = buffer;
 	var gainNode = context.createGain();
 	source.connect(gainNode);
 	gainNode.connect(context.destination);
 	gainNode.gain.value = gain;
-	gainNode.start(timeline[beg]);
-	gainNode.stop(timeline[end]);
+	gainNode.start(beginTime);
+	gainNode.stop(endTime);
 }
 
 function pauseAudio(source){
