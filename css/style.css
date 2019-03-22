@@ -118,28 +118,48 @@
 /*---------------------------- CONTENT ----------------------------- */
 .content {
 	background-color: transparent;
-	height: 80%;
+	height: 100%;
 	overflow-y: auto;
+	margin-bottom: 0;
 }
 
 .track {
 	position: relative;
-	background-color: black;
+	background-color: transparent;
 	height: 150px;
 	width: inherit;
 	margin: 10px;
-	box-shadow: 5px 5px 5px grey;
+	
+	display: grid;
+	grid-template-columns: auto 100px;
+	grid-column-gap: 5px;
 
+}
+.pista {
+	grid-column: 1;
+	width: 100%;
+	height: inherit;
+	display: grid;
+	grid-template-columns: 100px auto;
+	box-shadow: 5px 5px 5px grey;
+}
+
+.selection {
+	grid-column: 2;
+	width: 100%;
+	box-shadow: 5px 5px 5px grey;
+	background-color: transparent;
 }
 	.track-options {
 		position: absolute;
 		background-color: #FF8B41;
 		width: 100px;
-		height: inherit;
+		height: 100%;
 		border-color: black;
 		border: 5px;
 		padding: 10px;
 		margin-left:0; 
+		grid-column: 1;
 	}
 
 		.track-name{
@@ -176,10 +196,11 @@
 	.track-waveform {
 		position: relative;
 		border: 5px;
-		margin-left:100px;
 		background-color: white;
 		height: inherit;
-		width: inherit;
+		width: 100%;
+		grid-column: 2
+
 	}
 
 	canvas {
@@ -188,6 +209,14 @@
 		height: inherit;
 		background-color: transparent;
 		overflow-x: auto;
+	}
+
+	.user-selected {
+		margin-right: 0;
+		width: 100%;
+		height: 150px;
+		background-color: #FF8B41;
+		position:relative;
 	}
 
 /*--------------------------- SCROLLBAR STYLE ---------------------------------*/
