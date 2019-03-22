@@ -194,65 +194,65 @@ function trackElements(index){
 	trackDiv.id = "track-"+index;
 	trackContainer.appendChild(trackDiv);
 
-	getTrackElement(index, editorSelection.id);
+	//getTrackElement(index, editorSelection.id);
 
 	var track = document.createElement("div");
 	track.className = "pista";
 	trackDiv.appendChild(track);
 
-	getTrackElement(index, editorSelection.id);
+	//getTrackElement(index, editorSelection.id);
 
 	var trackOptDiv = document.createElement("div");
 	trackOptDiv.className = "track-options";
 	track.appendChild(trackOptDiv);
 
-	getTrackElement(index, editorSelection.id);
+	// getTrackElement(index, editorSelection.id);
 
 	var trackName = document.createElement("p");
 	trackName.className = "track-name";
 	trackName.innerHTML = "Track " + index;
 	trackOptDiv.appendChild(trackName);
 
-	getTrackElement(index, editorSelection.id);
+	// getTrackElement(index, editorSelection.id);
 
 	var volumeDiv = document.createElement("div");
 	volumeDiv.className = "volume";
 	trackOptDiv.appendChild(volumeDiv);
 
-	getTrackElement(index, editorSelection.id);
+	// getTrackElement(index, editorSelection.id);
 
 	var volumeButtn = document.createElement("button");
-	// volumeButtn.className = " fa fa-volume-up center-icon";
+	volumeButtn.className = " fa fa-volume-up center-icon";
 	volumeButtn.innerHTML="volume"
 	volumeDiv.appendChild(volumeButtn);
 
-	getTrackElement(index, editorSelection.id);
+	// getTrackElement(index, editorSelection.id);
 
 	var volumeUpButtn = document.createElement("button");
-	// volumeUpButtn.className = " fa fa-caret-up btn-action";
+	volumeUpButtn.className = " fa fa-caret-up btn-action";
 	volumeUpButtn.innerHTML="volume up"
 	volumeDiv.appendChild(volumeUpButtn);
 
-	getTrackElement(index, editorSelection.id);
+	// getTrackElement(index, editorSelection.id);
 
 	var volumeDownButtn = document.createElement("button");
-	// volumeDownButtn.className = " fa fa-caret-down btn-action";
+	volumeDownButtn.className = " fa fa-caret-down btn-action";
 	volumeDownButtn.innerHTML="volume down"
 	volumeDiv.appendChild(volumeDownButtn);
 
-	getTrackElement(index, editorSelection.id);
+	// getTrackElement(index, editorSelection.id);
 	
 	var trackWaveDiv = document.createElement("div");
 	trackWaveDiv.className = "track-waveform";
 	trackDiv.appendChild(trackWaveDiv);
 
-	getTrackElement(index, editorSelection.id);
+	// getTrackElement(index, editorSelection.id);
 
 	var editorSelection =document.createElement("div");
 	editorSelection.className = "selection";
 	track.appendChild(editorSelection);
 
-	getTrackElement(index, editorSelection.id);
+	// getTrackElement(index, editorSelection.id);
 
 	var editorSelectButtn = document.createElement("button");
 	editorSelectButtn.className = " btn user-selected";
@@ -260,7 +260,7 @@ function trackElements(index){
 	editorSelectButtn.innerHTML = "Free";	
 	editorSelection.appendChild(editorSelectButtn);
 
-	getTrackElement(index, editorSelectButtn.id);
+	// getTrackElement(index, editorSelectButtn.id);
 }
 
 function getTrackElement(trackId, elementClassName){
