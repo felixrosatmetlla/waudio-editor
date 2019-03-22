@@ -196,9 +196,13 @@ function trackElements(index){
 	trackDiv.id = "track-"+index;
 	trackContainer.appendChild(trackDiv);
 
+	var track = document.createElement("div");
+	track.className = "pista";
+	trackDiv.appendChild(track);
+
 	var trackOptDiv = document.createElement("div");
 	trackOptDiv.className = "track-options";
-	trackDiv.appendChild(trackOptDiv);
+	track.appendChild(trackOptDiv);
 
 	var trackName = document.createElement("p");
 	trackName.className = "track-name";
@@ -224,6 +228,16 @@ function trackElements(index){
 	var trackWaveDiv = document.createElement("div");
 	trackWaveDiv.className = "track-waveform";
 	trackDiv.appendChild(trackWaveDiv);
+
+	var editorSelection =document.createElement("div");
+	editorSelection.className = "selection";
+	track.appendChild(editorSelection);
+
+	var editorSelectButtn = document.createElement("button");
+	editorSelectButtn.className = " btn user-selected";
+	editorSelectButtn.id = "selection-"+index;
+	editorSelectButtn.innerHTML = "Free";	
+	editorSelection.appendChild(editorSelectButtn);
 }
 
 function loadProject(projectMsg){
@@ -358,12 +372,12 @@ function cutAudio(){
 }
 
 function timeToSample(time){
-	var sample = time/fs;
-	return sample
+	var sample = time*fs;
+	return Math.floor(sample);
 }
 
 function sampleToTime(sample){
-	var time =sample*fs;
+	var time =sample/fs;
 	return time;
 }
 
@@ -381,7 +395,7 @@ function moveAudio(){
 	//Access the correct timeline audio clip position
 }
 
-var playButton = document.querySelector('.play fa fa-play');
+var playButton = document.querySelector('#playBtn');
 playButton.addEventListener('click', prepareToPlay);
 
 function prepareToPlay(){ //Function that prepares the buffers to play them in time and order
@@ -389,13 +403,16 @@ function prepareToPlay(){ //Function that prepares the buffers to play them in t
 	var gains = [];
 	var timelines = [[]];
 	projectState.audios.map((audio,index)=>{
-		gain[index] = audio.gain;
+		console.log(audio)
+		console.log(index)
+		gains[index] = audio.gain;
+		timelines[index] = [];
 		audio.timeline.map((time,ind) => {
+			console.log(time)
 			timelines[index][ind] = time;
 		})
 	})
-	console.log(gains);
-	console.log(timelines);
+
 
 	buffersToPlay.map((track, index) =>{
 		track.map((buffer,ind)=>{
@@ -407,14 +424,16 @@ function prepareToPlay(){ //Function that prepares the buffers to play them in t
 function playAudio(buffer, timeline, gain){
 	var beginTime = sampleToTime(timeline.begin)
 	var endTime = sampleToTime(timeline.end)
-	var source = context.createBufferSource();
+	console.log(beginTime)
+	console.log(endTime)
+	let source = context.createBufferSource();
 	source.buffer = buffer;
-	var gainNode = context.createGain();
+	let gainNode = context.createGain();
 	source.connect(gainNode);
 	gainNode.connect(context.destination);
 	gainNode.gain.value = gain;
-	gainNode.start(beginTime);
-	gainNode.stop(endTime);
+	source.start(beginTime);
+	source.stop(endTime);
 }
 
 function pauseAudio(source){

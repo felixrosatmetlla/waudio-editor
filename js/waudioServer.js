@@ -95,9 +95,9 @@ wsServer.on('request', function(request) {
                                 //Track Name?
                                 // url: "C:/Users/Felix/Desktop/waudio-editor/Projects/Projects/TestProject1/Migrabacion2.wav",
                                 url: "http://ecv-etic.upf.edu/students/2019/farora/waudio-editor/Projects/TestProject1/Migrabacion2.wav",
-                                timeline: [{begin:50000, end: 60000}, {begin:2000, end:3000}], 
-                                cuts: [{begin: 50000 , end: 60000},{begin: 2000, end:3000}],
-                                gain: 0.5,
+                                timeline: [{begin:30000, end: 60000}, {begin:102000, end:200000}], 
+                                cuts: [{begin: 60000 , end: 90000},{begin:102000, end:200000}],
+                                gain: 0.8,
                                 editor: ''
                         },{
                                 name: 'Migrabacion2.wav',
@@ -105,7 +105,7 @@ wsServer.on('request', function(request) {
                                 url: "http://ecv-etic.upf.edu/students/2019/farora/waudio-editor/Projects/TestProject1/Migrabacion2.wav",
                                 timeline: [{begin:0, end: 430496}], 
                                 // cuts: {},
-                                gain: 0.5,
+                                gain: 0.1,
                                 editor: ''
                         }
                         ],
