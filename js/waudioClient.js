@@ -179,8 +179,6 @@ function paintProject(buffersToPlay){
 	buffersToPlay.map((audio,index) => {
 		trackElements(index);
 		console.log(audio);
-		console.log(audio.keys())
-		console.log(audio.values())
 		// audio.map((clip,id)=>{
 		// 	console.log(buffersToPlay[index][id])
 		// 	paintWaveform(clip,index);
@@ -194,65 +192,74 @@ function trackElements(index){
 	trackDiv.id = "track-"+index;
 	trackContainer.appendChild(trackDiv);
 
-	//getTrackElement(index, editorSelection.id);
+	getTrackElement(index, trackDiv.id);
 
 	var track = document.createElement("div");
 	track.className = "pista";
+	track.id = "pista-" + index;
 	trackDiv.appendChild(track);
 
-	//getTrackElement(index, editorSelection.id);
+	getTrackElement(index, track.id);
 
 	var trackOptDiv = document.createElement("div");
 	trackOptDiv.className = "track-options";
+	trackOptDiv.id = "track-options-" + index;
 	track.appendChild(trackOptDiv);
 
-	// getTrackElement(index, editorSelection.id);
+	getTrackElement(index, trackOptDiv.id);
 
 	var trackName = document.createElement("p");
 	trackName.className = "track-name";
+	trackName.id = "track-name-" + index;
 	trackName.innerHTML = "Track " + index;
 	trackOptDiv.appendChild(trackName);
 
-	// getTrackElement(index, editorSelection.id);
+	getTrackElement(index, trackName.id);
 
 	var volumeDiv = document.createElement("div");
 	volumeDiv.className = "volume";
+	volumeDiv.id = "volume-" + index;
 	trackOptDiv.appendChild(volumeDiv);
 
-	// getTrackElement(index, editorSelection.id);
+	getTrackElement(index, volumeDiv.id);
 
 	var volumeButtn = document.createElement("button");
 	volumeButtn.className = " fa fa-volume-up center-icon";
+	volumeButtn.id = "volBtn-" + index;
 	volumeButtn.innerHTML="volume"
 	volumeDiv.appendChild(volumeButtn);
 
-	// getTrackElement(index, editorSelection.id);
+	getTrackElement(index, volumeButtn.id);
 
 	var volumeUpButtn = document.createElement("button");
 	volumeUpButtn.className = " fa fa-caret-up btn-action";
+	volumeUpButtn.id = "upBtn-" + index;
 	volumeUpButtn.innerHTML="volume up"
 	volumeDiv.appendChild(volumeUpButtn);
 
-	// getTrackElement(index, editorSelection.id);
+	getTrackElement(index, volumeUpButtn.id);
 
 	var volumeDownButtn = document.createElement("button");
 	volumeDownButtn.className = " fa fa-caret-down btn-action";
+	volumeDownButtn.id = "dwnBtn-" + index;
 	volumeDownButtn.innerHTML="volume down"
 	volumeDiv.appendChild(volumeDownButtn);
 
-	// getTrackElement(index, editorSelection.id);
+	getTrackElement(index, volumeDownButtn.id);
 	
 	var trackWaveDiv = document.createElement("div");
 	trackWaveDiv.className = "track-waveform";
-	trackDiv.appendChild(trackWaveDiv);
+	trackWaveDiv.id = "track-waveform-" + index;
+	track.appendChild(trackWaveDiv);
 
-	// getTrackElement(index, editorSelection.id);
+	getTrackElement(index, trackWaveDiv.id);
 
 	var editorSelection =document.createElement("div");
 	editorSelection.className = "selection";
-	track.appendChild(editorSelection);
+	editorSelection.id = "selection-" + index;
+	trackDiv.appendChild(editorSelection);
 
-	// getTrackElement(index, editorSelection.id);
+	getTrackElement(index, editorSelection.id);
 
 	var editorSelectButtn = document.createElement("button");
 	editorSelectButtn.className = " btn user-selected";
@@ -260,13 +267,15 @@ function trackElements(index){
 	editorSelectButtn.innerHTML = "Free";	
 	editorSelection.appendChild(editorSelectButtn);
 
-	// getTrackElement(index, editorSelectButtn.id);
+	getTrackElement(index, editorSelectButtn.id);
+
+	console.log(projectElements);
 }
 
-function getTrackElement(trackId, elementClassName){
+function getTrackElement(trackId, elementId){
 	projectElements[trackId] = {};
-	var element = document.querySelector("." + id);
-	projectElements[trackId][id] = element;
+	var element = document.querySelector("." + elementId);
+	projectElements[trackId][elementId] = element;
 }
 
 function loadProject(projectMsg){
@@ -475,7 +484,7 @@ function changeGain(gainValue, audio){ //By Message(update from other users chan
 
 }
 
-var volBtn = document.querySelector()
+// var volBtn = document.querySelector()
 // TODO: Merge increase and decrease into one function
 function decreaseGain(){
 	var gainDelta = 0.05;
