@@ -410,19 +410,16 @@ function getFinalAudio(){
 
 }
 
-
+var cutClip = document.querySelector("#cutInput_clip");
 var cutFromInput = document.querySelector("#cutInput_fromTime");
 var cutToInput = document.querySelector("#cutInput_toTime");
+var cutBtn = document.querySelector('#cutBtn');
+cutBtn.addEventListener('click', cutAudio);
 
-function cutAudio(){
-	//Get Start timeCut
-	var startTime;
-	var startSample = timeToSample(startTime);
-	
-	//Get final timecut
-	var endTime;
-	var endSample = timeToSample(endTime);
-
+// TODO: remake
+//TODO: Manage that we can get 2 or 3 buffers
+//TODO: Save the buffers accordingly
+function getCutBuffers(){
 	var startBuffer = context.createBuffer(1, startSample - 0, 44100);
 	var midBuffer = context.createBuffer(1, endSample - startSample, 44100);
 	var endBuffer = context.createBuffer(1, buffers[local_user.editingAudio].length - endSample, 44100);
@@ -454,8 +451,55 @@ function cutAudio(){
 			endBuffer[i] = buffers[local_user.editingAudio][j];
 		}
 	}
-	//TODO: Manage that we can get 2 or 3 buffers
-	//TODO: Save the buffers accordingly
+
+	console.log(startBuffer);
+	console.log(midBuffer);
+	console.log(endBuffer);
+}
+function cutAudio(){
+	var startTime = parseFloat(cutFromInput.value);
+	var startSample = timeToSample(startTime);
+	
+	var endTime = parseFloat(cutToInput.value);
+	var endSample = timeToSample(endTime);
+
+	var clipToCut = parseInt(cutClip.value);
+	var clipTimeline = projectState['audios'][local_user.editingAudio].timeline[clipToCut];
+	var clipLength = clipTimeline.end - clipTimeline.begin;
+
+	var buffersCuts = [{}];
+	var startBuffer;
+	var midBuffer;
+	var endBuffer;
+
+	if(startSample===0){
+		startBuffer = {begin: startSample, end: endSample};
+		endBuffer = {begin:endSample+1,end:clipLength};
+	}
+	else if(endSample===clipLength){
+		startBuffer = {begin: 0, end: startSample-1};
+		endBuffer = {begin: startSample, end: endSample};
+	}
+	else{
+		startBuffer = {begin: 0, end: startSample-1};
+		midBuffer = {begin: start, end: endSample}
+		endBuffer = {begin: endSample+1, end: clipLength};
+	}
+
+	buffersCuts=[startBuffer,midBuffer,endBuffer];
+
+	var cutMsg = {
+		editorId: local_user.id,
+		editor: local_user.name,
+		project: local_user.project,
+		track: local_user.editingAudio,
+		clip: clipNumber,  
+		cuts: buffersCuts,
+		type: 'cutAudio',
+	};
+
+	socket.send(JSON.stringify(moveMsg));
+
 	
 }
 
@@ -500,6 +544,7 @@ function moveAudio(){
 	else{
 		projSize = projectState.size;
 	}
+
 	var moveMsg = {
 		editorId: local_user.id,
 		editor: local_user.name,

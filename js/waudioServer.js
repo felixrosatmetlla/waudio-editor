@@ -151,6 +151,36 @@ wsServer.on('request', function(request) {
             }
 
             else if(msg.type === 'cutAudio'){
+                console.log(msg);
+                if(msg.editor === projects[msg.project].audios[msg.track].editor){
+                    // Delete actual clip
+                    // Save new clips
+                    // Change also timelines
+                    projects[msg.project].audios[msg.track]['cuts'][msg.clip] = msg.cuts;
+                    console.log(projects[msg.project].audios[msg.track].timeline[msg.clip]);
+                    var cutMsg = {
+                        track: msg.track,
+                        clip: msg.clip,
+                        size: msg.size,
+                        timelines: null,
+                        cuts: msg.cuts,
+                        type: 'cutAudio',
+                    };
+                    console.log(cutMsg);
+                    clients.map((client) =>{
+                        if(client.project === msg.project){
+                            client.connection.sendUTF(JSON.stringify(cutMsg));
+                        }  
+                    })
+                }
+                else{
+                    var notEditorMsg = {
+                        data: 'You are not the editor of this track',
+                        type: 'editDeny'
+                    }
+
+                    connection.sendUTF(JSON.stringify(notEditorMsg))
+                }
                 //TODO:Process data in own world
                 //TODO: Send Message
             }
