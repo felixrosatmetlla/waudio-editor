@@ -78,6 +78,7 @@ wsServer.on('request', function(request) {
                 var clientObj = {
                     id: id,
                     name: msg.name,
+                    project: msg.project,
                     connection: connection
                 };
                 clients.push(clientObj);
@@ -120,8 +121,32 @@ wsServer.on('request', function(request) {
             }
 
             else if(msg.type === 'moveAudio'){
-                //TODO:Process data in own world
-                //TODO: Send Message
+                console.log(msg);
+                if(msg.editor === projects[msg.project].audios[msg.track].editor){
+                    projects[msg.project].audios[msg.track].timeline[msg.clip] = msg.timeline;
+                    
+                    var moveMsg = {
+                        track: msg.track,
+                        clip: msg.clip,
+                        size: msg.projSize,
+                        timeline: msg.timeline,
+                        type: 'moveAudio',
+                    };
+
+                    clients.map((client) =>{
+                        if(client.project === msg.project){
+                            client.connection.sendUTF(JSON.stringify(gainMsg));
+                        }  
+                    })
+                }
+                else{
+                    var notEditorMsg = {
+                        data: 'You are not the editor of this track',
+                        type: 'editDeny'
+                    }
+
+                    connection.sendUTF(JSON.stringify(notEditorMsg))
+                }
             }
 
             else if(msg.type === 'cutAudio'){
@@ -131,7 +156,57 @@ wsServer.on('request', function(request) {
 
             else if(msg.type === 'gainChange'){
                 console.log(msg);
-                
+                if(msg.editor === projects[msg.project].audios[msg.track].editor){
+                    projects[msg.project].audios[msg.track].gain = msg.gain;
+                    
+                    var gainMsg = {
+                        track: msg.track,
+                        gain: msg.gain,
+                        type: 'gainChange',
+                    };
+
+                    clients.map((client) =>{
+                        if(client.project === msg.project){
+                            client.connection.sendUTF(JSON.stringify(gainMsg));
+                        }  
+                    })
+                }
+                else{
+                    var notEditorMsg = {
+                        data: 'You are not the editor of this track',
+                        type: 'editDeny'
+                    }
+
+                    connection.sendUTF(JSON.stringify(notEditorMsg))
+                }
+            }
+
+            else if(msg.type === 'reqEdit'){
+                if(projects[msg.project].audios[msg.track].editor === ''){
+                    var editorObj = {
+                        editorName: msg.name,
+                        data: 'accepted',
+                        track: msg.track,
+                        type: 'editorMsg',
+                    }
+
+                    projects[msg.project].audios[msg.track].editor = msg.name;
+                    
+                    clients.map((client) =>{
+                        if(client.project === msg.project){
+                            client.connection.sendUTF(JSON.stringify(editorObj));
+                        }  
+                    })
+                }
+                else{
+                    var deniedEdit = {
+                        editorName: projects[msg.project].audios[msg.track].editor,
+                        data: 'denied',
+                        type: 'editorMsg',
+                    }
+
+                    connection.sendUTF(JSON.stringify(deniedEdit))
+                }
                 //TODO:Process data in own world
                 //TODO: Send Message
             }

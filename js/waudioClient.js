@@ -13,6 +13,7 @@ var projectElements= [{}];
 var local_user = {
 	id: null,
 	name: '',
+	project: '',
 	editingAudio: null
 }
 
@@ -37,21 +38,25 @@ function requestProject(){
 	context = new (window.AudioContext || window.webkitAudioContext);
 
 	// get username value
+	var projectName = projectInput.value;
 	var username = usernameInput.value;
 	var userObj = {
 		name: username,
+		project: projectName,
 		type: 'user'
 	}
 
-	// get project name
-	var projectName = projectInput.value;
 	var projectObj = {
 		name: projectName,
 		type: 'reqProj'
 	}
+
 	// send data
 	socket.send(JSON.stringify(userObj));
 	socket.send(JSON.stringify(projectObj));
+
+	local_user.name = username;
+	local_user.project = projectName;
 }
 
 socket.onmessage = function(message){
@@ -60,19 +65,33 @@ socket.onmessage = function(message){
 	if (obj_msg.type === 'project'){
 		loadProject(obj_msg);
 	}
+	else if (obj_msg.type === 'editorMsg'){
+		checkEditor(obj_msg);
+	}
 	else if (obj_msg.type === 'moveAudio'){
-
+		changeTimelines(obj_msg);
 	}
 	else if (obj_msg.type === 'cutAudio'){
 
 	}
-	else if (obj_msg.type === 'volumeChange'){
-		// changeGain(obj_msg.data.gain, obj_msg.data.audio);
+	else if (obj_msg.type === 'gainChange'){
+		changeGain(obj_msg.gain, obj_msg.track);
+	}
+	else if (obj_msg.type === 'editDeny'){
+		// TODO: Show in some way that you are not the editor
 	}
 }
 
-function uploadFile(){
-	
+function checkEditor(msg){
+	if(msg.data === 'accepted'){
+		//TODO: Check change message
+		projectElements[msg.track]['selectionBtn-'+msg.track].innerText = local_user.name;
+		// projectElements[msg.track]['selectionBtn-'+msg.track].innerHTML = local_user.name;
+		local_user.editingAudio = msg.track; 
+	}
+	else if(msg.data === 'denied'){
+		//TODO: Remark thta its not free
+	}
 }
 
 //Generate the Wave Image to show in the timeline
@@ -178,35 +197,40 @@ function paintProject(buffersToPlay){
 	console.log(buffersToPlay)
 	buffersToPlay.map((audio,index) => {
 		trackElements(index);
-		console.log(audio);
-		// audio.map((clip,id)=>{
+		console.log(index);
+		
+	})
+}
+// audio.map((clip,id)=>{
 		// 	console.log(buffersToPlay[index][id])
 		// 	paintWaveform(clip,index);
 		// })
 
-	})
-}
 function trackElements(index){
 	var trackDiv = document.createElement("div");
 	trackDiv.className = "track";
 	trackDiv.id = "track-"+index;
 	trackContainer.appendChild(trackDiv);
 
-	getTrackElement(index, trackDiv.id);
+	projectElements[index] = {};
+	projectElements[index][trackDiv.id] = trackDiv;
+
 
 	var track = document.createElement("div");
 	track.className = "pista";
 	track.id = "pista-" + index;
 	trackDiv.appendChild(track);
 
-	getTrackElement(index, track.id);
+	projectElements[index][track.id] = track;
+
 
 	var trackOptDiv = document.createElement("div");
 	trackOptDiv.className = "track-options";
 	trackOptDiv.id = "track-options-" + index;
 	track.appendChild(trackOptDiv);
 
-	getTrackElement(index, trackOptDiv.id);
+	projectElements[index][trackOptDiv.id] = trackOptDiv;
+
 
 	var trackName = document.createElement("p");
 	trackName.className = "track-name";
@@ -214,14 +238,15 @@ function trackElements(index){
 	trackName.innerHTML = "Track " + index;
 	trackOptDiv.appendChild(trackName);
 
-	getTrackElement(index, trackName.id);
+	projectElements[index][trackName.id] = trackName;
 
 	var volumeDiv = document.createElement("div");
 	volumeDiv.className = "volume";
 	volumeDiv.id = "volume-" + index;
 	trackOptDiv.appendChild(volumeDiv);
 
-	getTrackElement(index, volumeDiv.id);
+	projectElements[index][volumeDiv.id] = volumeDiv;
+
 
 	var volumeButtn = document.createElement("button");
 	volumeButtn.className = " fa fa-volume-up center-icon";
@@ -229,7 +254,8 @@ function trackElements(index){
 	volumeButtn.innerHTML="volume"
 	volumeDiv.appendChild(volumeButtn);
 
-	getTrackElement(index, volumeButtn.id);
+	projectElements[index][volumeButtn.id] = volumeButtn;
+	projectElements[index][volumeButtn.id].addEventListener('click', mute)
 
 	var volumeUpButtn = document.createElement("button");
 	volumeUpButtn.className = " fa fa-caret-up btn-action";
@@ -237,7 +263,8 @@ function trackElements(index){
 	volumeUpButtn.innerHTML="volume up"
 	volumeDiv.appendChild(volumeUpButtn);
 
-	getTrackElement(index, volumeUpButtn.id);
+	projectElements[index][volumeUpButtn.id] = volumeUpButtn;
+	projectElements[index][volumeUpButtn.id].addEventListener('click', increaseGain);
 
 	var volumeDownButtn = document.createElement("button");
 	volumeDownButtn.className = " fa fa-caret-down btn-action";
@@ -245,36 +272,55 @@ function trackElements(index){
 	volumeDownButtn.innerHTML="volume down"
 	volumeDiv.appendChild(volumeDownButtn);
 
-	getTrackElement(index, volumeDownButtn.id);
+	projectElements[index][volumeDownButtn.id] = volumeDownButtn;
+	projectElements[index][volumeDownButtn.id].addEventListener('click', decreaseGain);
 	
 	var trackWaveDiv = document.createElement("div");
 	trackWaveDiv.className = "track-waveform";
 	trackWaveDiv.id = "track-waveform-" + index;
 	track.appendChild(trackWaveDiv);
 
-	getTrackElement(index, trackWaveDiv.id);
+	projectElements[index][trackWaveDiv.id] = trackWaveDiv;
+
+
 
 	var editorSelection =document.createElement("div");
 	editorSelection.className = "selection";
 	editorSelection.id = "selection-" + index;
 	trackDiv.appendChild(editorSelection);
 
-	getTrackElement(index, editorSelection.id);
+	projectElements[index][editorSelection.id] = editorSelection;
+
+
 
 	var editorSelectButtn = document.createElement("button");
 	editorSelectButtn.className = " btn user-selected";
-	editorSelectButtn.id = "selection-"+index;
+	editorSelectButtn.id = "selectionBtn-"+index;
 	editorSelectButtn.innerHTML = "Free";	
 	editorSelection.appendChild(editorSelectButtn);
 
-	getTrackElement(index, editorSelectButtn.id);
+	projectElements[index][editorSelectButtn.id] = editorSelectButtn;
+	projectElements[index][editorSelectButtn.id].addEventListener('click', requestEdit)
 
-	console.log(projectElements);
+}
+
+function requestEdit(){
+	var reqEditTrack = {
+		id: local_user.id,
+		name: local_user.name,
+		project: local_user.project,
+		editing: local_user.editingAudio,
+		track: 0, //Search a way to tell track easily
+		type: 'reqEdit',
+	};
+
+	socket.send(JSON.stringify(reqEditTrack));
 }
 
 function getTrackElement(trackId, elementId){
 	projectElements[trackId] = {};
 	var element = document.querySelector("." + elementId);
+	console.log(element)
 	projectElements[trackId][elementId] = element;
 }
 
@@ -364,6 +410,10 @@ function getFinalAudio(){
 
 }
 
+
+var cutFromInput = document.querySelector("#cutInput_fromTime");
+var cutToInput = document.querySelector("#cutInput_toTime");
+
 function cutAudio(){
 	//Get Start timeCut
 	var startTime;
@@ -422,16 +472,57 @@ function sampleToTime(sample){
 // function processProjectChanges(){
 
 // }
+var moveToInput = document.querySelector("#moveInput_time");
+var clipMoveInput = document.querySelector('#moveInput_clip');
 
+//TODO: number clips always by order in timeline;
+//TODO: Do not permit overlap with clips;
 function moveAudio(){
 	//Get Start time Move
-	var destinationTime;
+	var destinationTime = moveToInput.value;
 	var destinationSample = timeToSample(destinationTime);
 	
-	var clipNumber
+	var clipNumber = moveInput_clip.value;
 
-	//Access the correct timeline audio clip position
+	var clipTimeline = projectState['audios'][local_user.editingAudio].timeline[clipNumber];
+	var clipLength = clipTimeline.end - clipTimeline.begin;
+
+	var endSample = destinationTime+clipLength;
+	
+	// Check overlap if(true) => overlap not allowed
+
+	var projSize;
+	if(endSample > projectState.size){
+		projSize = endSample;
+	}
+	else{
+		projSize = projectState.size;
+	}
+	var moveMsg = {
+		editorId: local_user.id,
+		editor: local_user.name,
+		project: local_user.project,
+		size: projSize,
+		track: local_user.editingAudio,
+		clip: clipNumber,  
+		timeline: {begin: destinationSample, end: endSample},
+		type: 'moveAudio',
+	};
+
+	socket.send(JSON.stringify(moveMsg));
+
 }
+function checkOverlap(){
+
+}
+function changeTimelines(msg){
+	projectState['audios'][msg.track].timeline[msg.clip] = msg.timeline;
+
+	if(msg.size > projectState.size){
+		// TODO: Change timeline size and rerender
+	}
+}
+
 
 var playButton = document.querySelector('#playBtn');
 playButton.addEventListener('click', prepareToPlay);
@@ -478,38 +569,45 @@ function pauseAudio(source){
 	source.stop(context.currentTime + 1);
 }
 
-function changeGain(gainValue, audio){ //By Message(update from other users change)
-	
-	projectState[audio].gain = gainValue;
+function changeGain(gainValue, track){ //By Message(update from other users change)
+	projectState['audios'][track].gain = gainValue;
 
 }
 
-// var volBtn = document.querySelector()
+function mute(){
+
+}
+
 // TODO: Merge increase and decrease into one function
+// TODO: Set maximum and minimum values of gain
 function decreaseGain(){
 	var gainDelta = 0.05;
-	projectState[audio].gain = projectState[audio].gain - gainDelta;
+	var newGain = projectState['audios'][local_user.editingAudio].gain - gainDelta;
 
 	var gainMsg = {
-		project: '',//To see where its defined
-		audio: audio, //Obtain audio name in which the user is working
-		gain: projectState[audio].gain,
-		type: gainChange
-	}
+		editorId: local_user.id,
+		editor: local_user.name,
+		project: local_user.project,
+		track: local_user.editingAudio, 
+		gain: newGain,
+		type: 'gainChange',
+	};
 
 	socket.send(JSON.stringify(gainMsg));
 }
 
 function increaseGain(){
 	var gainDelta = 0.05;
-	projectState[audio].gain = projectState[audio].gain + gainDelta;
+	var newGain = projectState['audios'][local_user.editingAudio].gain + gainDelta;
 
 	var gainMsg = {
-		project: '',//To see where its defined
-		audio: audio, //Obtain audio name in which the user is working
-		gain: projectState[audio].gain,
-		type: gainChange
-	}
+		editorId: local_user.id,
+		editor: local_user.name,
+		project: local_user.project,
+		track: local_user.editingAudio, 
+		gain: newGain,
+		type: 'gainChange',
+	};
 
 	socket.send(JSON.stringify(gainMsg));
 }
