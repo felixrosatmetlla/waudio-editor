@@ -124,18 +124,19 @@ wsServer.on('request', function(request) {
                 console.log(msg);
                 if(msg.editor === projects[msg.project].audios[msg.track].editor){
                     projects[msg.project].audios[msg.track].timeline[msg.clip] = msg.timeline;
-                    
+                    projects[msg.project].size = msg.size; //TODO: Maybe if
+                    console.log(projects[msg.project].audios[msg.track].timeline[msg.clip]);
                     var moveMsg = {
                         track: msg.track,
                         clip: msg.clip,
-                        size: msg.projSize,
+                        size: msg.size,
                         timeline: msg.timeline,
                         type: 'moveAudio',
                     };
-
+                    console.log(moveMsg);
                     clients.map((client) =>{
                         if(client.project === msg.project){
-                            client.connection.sendUTF(JSON.stringify(gainMsg));
+                            client.connection.sendUTF(JSON.stringify(moveMsg));
                         }  
                     })
                 }

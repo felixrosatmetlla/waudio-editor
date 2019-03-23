@@ -474,21 +474,23 @@ function sampleToTime(sample){
 // }
 var moveToInput = document.querySelector("#moveInput_time");
 var clipMoveInput = document.querySelector('#moveInput_clip');
+var moveBtn = document.querySelector('#moveBtn');
+moveBtn.addEventListener('click', moveAudio);
 
 //TODO: number clips always by order in timeline;
 //TODO: Do not permit overlap with clips;
 function moveAudio(){
 	//Get Start time Move
-	var destinationTime = moveToInput.value;
+	var destinationTime = parseFloat(moveToInput.value);
 	var destinationSample = timeToSample(destinationTime);
 	
-	var clipNumber = moveInput_clip.value;
+	var clipNumber = parseInt(moveInput_clip.value);
 
 	var clipTimeline = projectState['audios'][local_user.editingAudio].timeline[clipNumber];
 	var clipLength = clipTimeline.end - clipTimeline.begin;
 
-	var endSample = destinationTime+clipLength;
-	
+	var endSample = destinationSample+clipLength;
+
 	// Check overlap if(true) => overlap not allowed
 
 	var projSize;
