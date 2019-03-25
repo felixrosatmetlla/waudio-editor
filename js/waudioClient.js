@@ -405,10 +405,6 @@ function getAudioIndex(audioName){
 function checkEditMode(track){
 
 }
-                            
-function getFinalAudio(){
-
-}
 
 var cutClip = document.querySelector("#cutInput_clip");
 var cutFromInput = document.querySelector("#cutInput_fromTime");
@@ -626,6 +622,112 @@ function playAudio(buffer, timeline, gain){
 function pauseAudio(source){
 	source.stop(context.currentTime + 1);
 }
+
+var exportButton = document.querySelector('#exportBtn');
+exportButton.addEventListener('click', exportAudio);
+
+function exportAudio(){
+	var finalAudioBlob = getFinalAudio();
+	createDownloadLink(finalAudioBlob);
+}
+function getFinalAudio(){
+	var fileSize = projectState.size;
+	var finalAudio = new Float32Array(fileSize);
+
+	buffersToPlay.map((track, index) => {
+		buffersToPlay[index].map((clip,id)=>{
+			var dummyBuffer = new Float32Array(fileSize);
+			var clipTimeline = projectState.audios[index].timeline[id];
+			var clipData = clip.getChannelData(0);
+
+			for(var i=clipTimeline.begin, j=0; i<clipTimeline.end; i++, j++){
+				dummyBuffer[i] = clipData[j];
+			}
+
+			for(var i=0; i<fileSize; i++){
+				finalAudio[i] = finalAudio[i] + dummyBuffer[i];
+			}
+
+		})
+	})
+
+	console.log(finalAudio);
+
+	var audioBlob = new Blob([finalAudio.buffer], {type: 'octet/stream'});
+	// var audioBlob = new Blob([finalAudio.buffer], {type: 'audio/wav'}); //To test
+
+	return audioBlob;
+}
+
+function createDownloadLink(blob) {
+    var container = document.querySelector('.audio-options');
+
+    var url = URL.createObjectURL(blob);
+    var au = document.createElement('audio');
+    var li = document.createElement('li');
+    var link = document.createElement('a');
+    //add controls to the <audio> element 
+    au.controls = true;
+    au.src = url;
+    //link the a element to the blob 
+    link.href = url;
+    link.download = new Date().toISOString() + '.wav';
+    link.innerHTML = link.download;
+    //add the new audio and a elements to the li element 
+    li.appendChild(au);
+    li.appendChild(link);
+    //add the li element to the ordered list 
+    container.appendChild(li);
+}
+// function exportAudioTest(type, before, after){
+// 	var rate = 22050;
+
+//     if (!before) { before = 0; }
+//     if (!after) { after = 0; }
+
+//     var channel = 0,
+//         buffers = [];
+//     for (channel = 0; channel < numChannels; channel++){
+//         buffers.push(mergeBuffers('recBuffers'[channel], recLength));
+//     }
+
+//     var i = 0,
+//         offset = 0,
+//         newbuffers = [];
+
+//     for (channel = 0; channel < numChannels; channel += 1) {
+//         offset = 0;
+//         newbuffers[channel] = new Float32Array(before + recLength + after);
+//         if (before > 0) {
+//             for (i = 0; i < before; i += 1) {
+//                 newbuffers[channel].set([0], offset);
+//                 offset += 1;
+//             }
+//         }
+//         newbuffers[channel].set(buffers[channel], offset);
+//         offset += buffers[channel].length;
+//         if (after > 0) {
+//             for (i = 0; i < after; i += 1) {
+//                 newbuffers[channel].set([0], offset);
+//                 offset += 1;
+//             }
+//         }
+//     }
+
+//     if (numChannels === 2){
+//         var interleaved = interleave(newbuffers[0], newbuffers[1]);
+//     } else {
+//         var interleaved = newbuffers[0];
+//     }
+
+//     var downsampledBuffer = downsampleBuffer(interleaved, rate);
+//     var dataview = encodeWAV(downsampledBuffer, rate);
+//     var audioBlob = new Blob([dataview], { type: type });
+
+//     this.postMessage(audioBlob);
+// }
+
+
 
 function changeGain(gainValue, track){ //By Message(update from other users change)
 	projectState['audios'][track].gain = gainValue;
