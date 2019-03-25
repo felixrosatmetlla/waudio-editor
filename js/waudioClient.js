@@ -419,12 +419,16 @@ function getCutBuffers(msg){
 	projectState.audios[msg.track]['cuts'].splice(msg.clip,1,msg.cuts);
     projectState.audios[msg.track]['timeline'].splice(msg.clip,1,msg.timeline);
 
-	var startBuffer = context.createBuffer(1, startSample - 0, 44100);
-	var midBuffer = context.createBuffer(1, endSample - startSample, 44100);
-	var endBuffer = context.createBuffer(1, buffers[local_user.editingAudio].length - endSample, 44100);
+	// var startBuffer = context.createBuffer(1, startSample - 0, 44100);
+	// var midBuffer = context.createBuffer(1, endSample - startSample, 44100);
+	// var endBuffer = context.createBuffer(1, buffers[local_user.editingAudio].length - endSample, 44100);
 	var cutBuffers=[];
 	projectState.audios[msg.track].cuts.map((x,index)=>{
+		console.log(x)
+		console.log(x.end)
+		console.log(x.begin)
 		var length = x.end - x.begin;
+		console.log(length)
 		var emptyBuffer = new Float32Array(length);
 		var dummyBuffer = context.createBuffer(1, length, 44100);
 		
@@ -458,8 +462,9 @@ function cutAudio(){
 	var startBuffer;
 	var midBuffer;
 	var endBuffer;
-
+	console.log('starting')
 	if(startSample===0){
+		console.log('case 1')
 		startBuffer = {begin: startSample, end: endSample};
 		endBuffer = {begin:endSample+1,end:clipLength};
 
@@ -470,6 +475,8 @@ function cutAudio(){
 		bufferTimes=[startBufferTime, endBufferTime];
 	}
 	else if(endSample===clipLength){
+		console.log('case 2')
+
 		startBuffer = {begin: 0, end: startSample-1};
 		endBuffer = {begin: startSample, end: endSample};
 
@@ -480,6 +487,8 @@ function cutAudio(){
 		bufferTimes=[startBufferTime, endBufferTime];
 	}
 	else{
+		console.log('case 3')
+
 		startBuffer = {begin: 0, end: startSample-1};
 		midBuffer = {begin: startSample, end: endSample}
 		endBuffer = {begin: endSample+1, end: clipLength};
@@ -499,13 +508,16 @@ function cutAudio(){
 		editor: local_user.name,
 		project: local_user.project,
 		track: local_user.editingAudio,
-		clip: clipNumber,  
+		clip: clipToCut,  
 		cuts: buffersCuts,
 		timelines: bufferTimes,
 		type: 'cutAudio',
 	};
 
-	socket.send(JSON.stringify(moveMsg));
+	console.log(cutMsg)
+	console.log(bufferTimes)
+	console.log(buffersCuts)
+	socket.send(JSON.stringify(cutMsg));
 
 	
 }
@@ -627,19 +639,21 @@ var exportButton = document.querySelector('#exportBtn');
 exportButton.addEventListener('click', exportAudio);
 
 function exportAudio(){
+	console.log('exporting')
 	var finalAudioBlob = getFinalAudio();
 	createDownloadLink(finalAudioBlob);
 }
 function getFinalAudio(){
 	var fileSize = projectState.size;
 	var finalAudio = new Float32Array(fileSize);
-
+	console.log('To initiate');
 	buffersToPlay.map((track, index) => {
+			console.log('Track');
 		buffersToPlay[index].map((clip,id)=>{
 			var dummyBuffer = new Float32Array(fileSize);
 			var clipTimeline = projectState.audios[index].timeline[id];
 			var clipData = clip.getChannelData(0);
-
+			console.log('clip')
 			for(var i=clipTimeline.begin, j=0; i<clipTimeline.end; i++, j++){
 				dummyBuffer[i] = clipData[j];
 			}

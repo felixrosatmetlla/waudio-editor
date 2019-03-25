@@ -159,7 +159,6 @@ wsServer.on('request', function(request) {
                     var cutMsg = {
                         track: msg.track,
                         clip: msg.clip,
-                        size: msg.size,
                         timelines: msg.timelines,
                         cuts: msg.cuts,
                         type: 'cutAudio',
