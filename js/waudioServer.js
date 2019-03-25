@@ -105,7 +105,7 @@ wsServer.on('request', function(request) {
                                 // url: "C:/Users/Felix/Desktop/waudio-editor/Projects/Projects/TestProject1/Migrabacion2.wav",
                                 url: "http://ecv-etic.upf.edu/students/2019/farora/waudio-editor/Projects/TestProject1/Migrabacion2.wav",
                                 timeline: [{begin:0, end: 430496}], 
-                                // cuts: {},
+                                // cuts: [{}],
                                 gain: 0.1,
                                 editor: ''
                         }
@@ -153,16 +153,14 @@ wsServer.on('request', function(request) {
             else if(msg.type === 'cutAudio'){
                 console.log(msg);
                 if(msg.editor === projects[msg.project].audios[msg.track].editor){
-                    // Delete actual clip
-                    // Save new clips
-                    // Change also timelines
-                    projects[msg.project].audios[msg.track]['cuts'][msg.clip] = msg.cuts;
+                    projects[msg.project].audios[msg.track]['cuts'].splice(msg.clip,1,msg.cuts);
+                    projects[msg.project].audios[msg.track]['timeline'].splice(msg.clip,1,msg.timeline);
                     console.log(projects[msg.project].audios[msg.track].timeline[msg.clip]);
                     var cutMsg = {
                         track: msg.track,
                         clip: msg.clip,
                         size: msg.size,
-                        timelines: null,
+                        timelines: msg.timelines,
                         cuts: msg.cuts,
                         type: 'cutAudio',
                     };

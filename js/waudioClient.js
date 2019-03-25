@@ -72,7 +72,7 @@ socket.onmessage = function(message){
 		changeTimelines(obj_msg);
 	}
 	else if (obj_msg.type === 'cutAudio'){
-
+		getCutBuffers(obj_msg);
 	}
 	else if (obj_msg.type === 'gainChange'){
 		changeGain(obj_msg.gain, obj_msg.track);
@@ -419,42 +419,31 @@ cutBtn.addEventListener('click', cutAudio);
 // TODO: remake
 //TODO: Manage that we can get 2 or 3 buffers
 //TODO: Save the buffers accordingly
-function getCutBuffers(){
+function getCutBuffers(msg){
+	projectState.audios[msg.track]['cuts'].splice(msg.clip,1,msg.cuts);
+    projectState.audios[msg.track]['timeline'].splice(msg.clip,1,msg.timeline);
+
 	var startBuffer = context.createBuffer(1, startSample - 0, 44100);
 	var midBuffer = context.createBuffer(1, endSample - startSample, 44100);
 	var endBuffer = context.createBuffer(1, buffers[local_user.editingAudio].length - endSample, 44100);
-	
-	if(startSample===0){
-		for(i=0; i<endSample; i++){
-			startBuffer[i] = buffers[local_user.editingAudio][i];
-		}
-		for(i=0,j=endSample; j<buffers[local_user.editingAudio].length; i++, j++){
-			endBuffer[i] = buffers[local_user.editingAudio][j];
-		}
-	}
-	else if(endSample===buffers[local_user.editingAudio].length){
-		for(i=0; i<startSample; i++){
-			startBuffer[i] = buffers[local_user.editingAudio][i];
-		}
-		for(i=0,j=startSample; j<buffers[local_user.editingAudio].length; i++, j++){
-			endBuffer[i] = buffers[local_user.editingAudio][j];
-		}
-	}
-	else{
-		for(i=0; i<startSample; i++){
-			startBuffer[i] = buffers[local_user.editingAudio][i];
-		}
-		for(i=0,j=startSample; j<emptyBuffer.length; i++, j++){
-			midBuffer[i] = buffers[local_user.editingAudio][j];
-		}
-		for(i=0,j=endSample; j<buffers[local_user.editingAudio].length; i++, j++){
-			endBuffer[i] = buffers[local_user.editingAudio][j];
-		}
-	}
+	var cutBuffers=[];
+	projectState.audios[msg.track].cuts.map((x,index)=>{
+		var length = x.end - x.begin;
+		var emptyBuffer = new Float32Array(length);
+		var dummyBuffer = context.createBuffer(1, length, 44100);
+		
+		for (var i = x.begin, j=0; i < x.end; i++, j++) {
+	        var aux = data[i]
+	        emptyBuffer[j] = aux;
+	    }
+	    dummyBuffer.copyToChannel(emptyBuffer,0,0);
 
-	console.log(startBuffer);
-	console.log(midBuffer);
-	console.log(endBuffer);
+	    cutBuffers.push(dummyBuffer);
+	})
+
+	buffersToPlay[msg.track].splice(msg.clip, 1, cutBuffers);
+
+	console.log(buffersToPlay);
 }
 function cutAudio(){
 	var startTime = parseFloat(cutFromInput.value);
@@ -462,6 +451,8 @@ function cutAudio(){
 	
 	var endTime = parseFloat(cutToInput.value);
 	var endSample = timeToSample(endTime);
+
+	var cutLength = endSample-startSample;
 
 	var clipToCut = parseInt(cutClip.value);
 	var clipTimeline = projectState['audios'][local_user.editingAudio].timeline[clipToCut];
@@ -475,18 +466,37 @@ function cutAudio(){
 	if(startSample===0){
 		startBuffer = {begin: startSample, end: endSample};
 		endBuffer = {begin:endSample+1,end:clipLength};
+
+		startBufferTime = {begin: clipTimeline.begin, end: clipTimeline.begin + cutLength};
+		endBufferTime = {begin:clipTimeline.begin + cutLength+1, end:clipTimeline.end};
+
+		buffersCuts=[startBuffer,endBuffer];
+		bufferTimes=[startBufferTime, endBufferTime];
 	}
 	else if(endSample===clipLength){
 		startBuffer = {begin: 0, end: startSample-1};
 		endBuffer = {begin: startSample, end: endSample};
+
+		startBufferTime = {begin: clipTimeline.begin, end: clipTimeline.end - cutLength-1};
+		endBufferTime = {begin: clipTimeline.end - cutLength, end: clipTimeline.end};
+
+		buffersCuts=[startBuffer,endBuffer];
+		bufferTimes=[startBufferTime, endBufferTime];
 	}
 	else{
 		startBuffer = {begin: 0, end: startSample-1};
-		midBuffer = {begin: start, end: endSample}
+		midBuffer = {begin: startSample, end: endSample}
 		endBuffer = {begin: endSample+1, end: clipLength};
+
+		startBufferTime = {begin: clipTimeline.begin, end: clipTimeline.begin + startSample-1};
+		midBufferTime = {begin: clipTimeline.begin + startSample, end: clipTimeline.begin + endSample}
+		endBufferTime = {begin: clipTimeline.begin + endSample+1, end: clipTimeline.end};
+
+		buffersCuts=[startBuffer,midBuffer,endBuffer];
+		bufferTimes=[startBufferTime, midBufferTime, endBufferTime];
 	}
 
-	buffersCuts=[startBuffer,midBuffer,endBuffer];
+	
 
 	var cutMsg = {
 		editorId: local_user.id,
@@ -495,6 +505,7 @@ function cutAudio(){
 		track: local_user.editingAudio,
 		clip: clipNumber,  
 		cuts: buffersCuts,
+		timelines: bufferTimes,
 		type: 'cutAudio',
 	};
 
