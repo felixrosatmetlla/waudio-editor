@@ -349,20 +349,6 @@ async function loadProject(projectMsg){
 		})
 		await new Promise((resolve, reject) => setTimeout(resolve, 1000));
 		paintProject(buffersToPlay);
-		
-		// tRY TO AVOID SO MANY GLOBAL VARIABLES
-		// for(var audio in projectMsg.audios){
-			
-			
-		// 	gain.push(projectMsg.audios[audio].gain)
-		// 	timelinesToPlay.push(projectMsg.audios[audio].timeline)
-		// }
-
-		
-		
-
-		// Read Msg to set actual state of project in screen
-		// Paint
 	}
 	
 }
