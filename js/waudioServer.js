@@ -29,18 +29,18 @@ app.get('/',(req, res) => {
 // It's very crucial that the file name matches the name attribute in your html
 app.post('/', upload.single('audio'), (req, res) => {
     console.log(req);
-  // res.sendStatus(200); //send back that everything went ok
+    //send back that everything went ok
 });
 
-app.listen(9024);
+app.listen(9025);
 
 
 // Create the HTTP Server
 var WebSocketServer = require('websocket').server;
 var http = require('http');
 var server = http.createServer(function(request, response) {
-    response.end("Good");
-});
+    response.end("Good");});
+// var server = http.createServer(app);
 
 // Server will listen at port 9023
 server.listen(9023, function() { 
@@ -94,7 +94,7 @@ wsServer.on('request', function(request) {
                             {
                                 name: 'Migrabacion2.wav',
                                 //Track Name?
-                                // url: "C:/Users/Felix/Desktop/waudio-editor/Projects/Projects/TestProject1/Migrabacion2.wav",
+                                // url: "C:/home/farora/www/waudio-editor/Projects/TestProject1/Migrabacion2.wav",
                                 url: "http://ecv-etic.upf.edu/students/2019/farora/waudio-editor/Projects/TestProject1/Migrabacion2.wav",
                                 timeline: [{begin:30000, end: 60000}, {begin:102000, end:200000}], 
                                 cuts: [{begin: 60000 , end: 90000},{begin:102000, end:200000}],

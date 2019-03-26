@@ -814,6 +814,7 @@ var form = document.querySelector('#update-form');
 // // Maybe send a message to change the audio from /tmp/
 form.onsubmit = function(event){
  	event.preventDefault();
+ 	console.log('submitted');
 }
 // 	var moveToProject = {
 // 		audioName:'',
