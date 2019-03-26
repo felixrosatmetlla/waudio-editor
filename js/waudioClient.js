@@ -84,6 +84,7 @@ socket.onmessage = function(message){
 
 function checkEditor(msg){
 	if(msg.data === 'accepted'){
+		console.log(msg);
 		//TODO: Check change message
 		projectElements[msg.track]['selectionBtn-'+msg.track].innerText = local_user.name;
 		// projectElements[msg.track]['selectionBtn-'+msg.track].innerHTML = local_user.name;
@@ -324,7 +325,7 @@ function getTrackElement(trackId, elementId){
 	projectElements[trackId][elementId] = element;
 }
 
-function loadProject(projectMsg){
+async function loadProject(projectMsg){
 	// Save Project state
 	projectState = projectMsg;
 	// Load Audios needed
@@ -333,8 +334,9 @@ function loadProject(projectMsg){
 	}
 	else{
 		projectMsg.audios.map((x,index) => {
-			loadAudio(projectMsg.audios[index].url,x, index);
+		 	loadAudio(projectMsg.audios[index].url,x, index);
 		})
+		await new Promise((resolve, reject) => setTimeout(resolve, 1000));
 		paintProject(buffersToPlay);
 		
 		// tRY TO AVOID SO MANY GLOBAL VARIABLES
@@ -440,7 +442,6 @@ function getCutBuffers(msg){
 
 	// buffersToPlay[msg.track].splice(msg.clip, 1, ...cutBuffers);
 	buffersToPlay[msg.track] = cutBuffers;
-	console.log(buffersToPlay);
 }
 function cutAudio(){
 	var startTime = parseFloat(cutFromInput.value);
@@ -459,9 +460,7 @@ function cutAudio(){
 	var startBuffer;
 	var midBuffer;
 	var endBuffer;
-	console.log('starting')
 	if(startSample===0){
-		console.log('case 1')
 		startBuffer = {begin: startSample, end: endSample};
 		endBuffer = {begin:endSample+1,end:clipLength};
 
@@ -472,7 +471,6 @@ function cutAudio(){
 		bufferTimes=[startBufferTime, endBufferTime];
 	}
 	else if(endSample===clipLength){
-		console.log('case 2')
 
 		startBuffer = {begin: 0, end: startSample-1};
 		endBuffer = {begin: startSample, end: endSample};
@@ -484,7 +482,6 @@ function cutAudio(){
 		bufferTimes=[startBufferTime, endBufferTime];
 	}
 	else{
-		console.log('case 3')
 
 		startBuffer = {begin: 0, end: startSample-1};
 		midBuffer = {begin: startSample, end: endSample}
@@ -511,12 +508,7 @@ function cutAudio(){
 		type: 'cutAudio',
 	};
 
-	console.log(cutMsg)
-	console.log(bufferTimes)
-	console.log(buffersCuts)
-	socket.send(JSON.stringify(cutMsg));
-
-	
+	socket.send(JSON.stringify(cutMsg));	
 }
 
 function timeToSample(time){
