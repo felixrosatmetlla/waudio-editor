@@ -626,12 +626,14 @@ exportButton.addEventListener('click', exportAudio);
 
 function exportAudio(){
 	console.log('exporting')
-	var finalAudioBlob = getFinalAudio();
-	createDownloadLink(finalAudioBlob);
+	getFinalAudio();
+	// createDownloadLink(finalAudioBlob);
 }
 function getFinalAudio(){
 	var fileSize = projectState.size;
 	var finalAudio = new Float32Array(fileSize);
+	var finalAudioBuffer = context.createBuffer(1, fileSize, 44100);
+
 	console.log('To initiate');
 	buffersToPlay.map((track, index) => {
 			console.log('Track');
@@ -652,82 +654,87 @@ function getFinalAudio(){
 	})
 
 	console.log(finalAudio);
+	finalAudioBuffer.copyToChannel(finalAudio,0,0);
 
-	var audioBlob = new Blob([finalAudio.buffer], {type: 'octet/stream'});
-	// var audioBlob = new Blob([finalAudio.buffer], {type: 'audio/wav'}); //To test
-
-	return audioBlob;
+	make_download(finalAudioBuffer, fileSize);
 }
 
-function createDownloadLink(blob) {
-    var container = document.querySelector('.audio-options');
+function make_download(abuffer, total_samples) {
+	console.log(abuffer);
+	var container = document.querySelector('.options');
 
-    var url = URL.createObjectURL(blob);
-    var au = document.createElement('audio');
-    var li = document.createElement('li');
-    var link = document.createElement('a');
-    //add controls to the <audio> element 
-    au.controls = true;
-    au.src = url;
-    //link the a element to the blob 
-    link.href = url;
-    link.download = new Date().toISOString() + '.wav';
+	// set sample length and rate
+	var duration = abuffer.duration,
+		rate = abuffer.sampleRate,
+		offset = 0;
+
+	// Generate audio file and assign URL
+	var new_file = URL.createObjectURL(bufferToWave(abuffer, total_samples));
+
+	// Make it downloadable
+	var link = document.createElement('a');
+	// var download_link = document.getElementById("download_link");
+	link.href = new_file;
+	var name = new Date().toISOString() + '.wav';;
+	link.download = name;
     link.innerHTML = link.download;
-    //add the new audio and a elements to the li element 
-    li.appendChild(au);
-    li.appendChild(link);
-    //add the li element to the ordered list 
-    container.appendChild(li);
+    container.appendChild(link);
 }
-// function exportAudioTest(type, before, after){
-// 	var rate = 22050;
 
-//     if (!before) { before = 0; }
-//     if (!after) { after = 0; }
+// Convert AudioBuffer to a Blob using WAVE representation
+function bufferToWave(abuffer, len) {
+	var numOfChan = abuffer.numberOfChannels,
+	length = len * numOfChan * 2 + 44,
+	buffer = new ArrayBuffer(length),
+	view = new DataView(buffer),
+	channels = [], i, sample,
+	offset = 0,
+	pos = 0;
 
-//     var channel = 0,
-//         buffers = [];
-//     for (channel = 0; channel < numChannels; channel++){
-//         buffers.push(mergeBuffers('recBuffers'[channel], recLength));
-//     }
+	// write WAVE header
+	setUint32(0x46464952);                         // "RIFF"
+	setUint32(length - 8);                         // file length - 8
+	setUint32(0x45564157);                         // "WAVE"
 
-//     var i = 0,
-//         offset = 0,
-//         newbuffers = [];
+	setUint32(0x20746d66);                         // "fmt " chunk
+	setUint32(16);                                 // length = 16
+	setUint16(1);                                  // PCM (uncompressed)
+	setUint16(numOfChan);
+	setUint32(abuffer.sampleRate);
+	setUint32(abuffer.sampleRate * 2 * numOfChan); // avg. bytes/sec
+	setUint16(numOfChan * 2);                      // block-align
+	setUint16(16);                                 // 16-bit (hardcoded in this demo)
 
-//     for (channel = 0; channel < numChannels; channel += 1) {
-//         offset = 0;
-//         newbuffers[channel] = new Float32Array(before + recLength + after);
-//         if (before > 0) {
-//             for (i = 0; i < before; i += 1) {
-//                 newbuffers[channel].set([0], offset);
-//                 offset += 1;
-//             }
-//         }
-//         newbuffers[channel].set(buffers[channel], offset);
-//         offset += buffers[channel].length;
-//         if (after > 0) {
-//             for (i = 0; i < after; i += 1) {
-//                 newbuffers[channel].set([0], offset);
-//                 offset += 1;
-//             }
-//         }
-//     }
+	setUint32(0x61746164);                         // "data" - chunk
+	setUint32(length - pos - 4);                   // chunk length
 
-//     if (numChannels === 2){
-//         var interleaved = interleave(newbuffers[0], newbuffers[1]);
-//     } else {
-//         var interleaved = newbuffers[0];
-//     }
+	// write interleaved data
+	for(i = 0; i < abuffer.numberOfChannels; i++)
+		channels.push(abuffer.getChannelData(i));
 
-//     var downsampledBuffer = downsampleBuffer(interleaved, rate);
-//     var dataview = encodeWAV(downsampledBuffer, rate);
-//     var audioBlob = new Blob([dataview], { type: type });
+	while(pos < length) {
+		for(i = 0; i < numOfChan; i++) {             // interleave channels
+			sample = Math.max(-1, Math.min(1, channels[i][offset])); // clamp
+			sample = (0.5 + sample < 0 ? sample * 32768 : sample * 32767)|0; // scale to 16-bit signed int
+			view.setInt16(pos, sample, true);          // write 16-bit sample
+			pos += 2;
+		}
+		offset++                                     // next source sample
+	}
 
-//     this.postMessage(audioBlob);
-// }
+	// create Blob
+	return new Blob([buffer], {type: "audio/wav"});
 
+	function setUint16(data) {
+		view.setUint16(pos, data, true);
+		pos += 2;
+	}
 
+	function setUint32(data) {
+		view.setUint32(pos, data, true);
+		pos += 4;
+	}
+}
 
 function changeGain(gainValue, track){ //By Message(update from other users change)
 	projectState['audios'][track].gain = gainValue;
