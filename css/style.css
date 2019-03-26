@@ -9,7 +9,7 @@
 .header {
 	background-color: #FF8B41;
 	padding:10px;
-	min-height: 110px;
+	min-height: 150px;
 	max-height: 100px;
 	display: grid;
 	grid-template-columns: 15% auto;
@@ -18,18 +18,29 @@
 .options{
 	display: grid;
 	grid-template-columns: auto 10px;
-	grid-template-rows: 35px 35px;
+	grid-template-rows: 35px 35px 35px;
 	width: 100%;
 
 	grid-column-gap: 15px;
  	grid-row-gap: 5px;
 }
+.option{
+	grid-column-start: 1;
+	grid-column-end: 2;
+	grid-row-start: 1;
+	grid-row-end: 2;
+	display: grid;
+	grid-template-rows: 35px 35px;
+	grid-row-gap: 5px;
+
+
+}
 
 	.import-audio {
+		height: 100%;
 		background-color: white;
 		border: none;
 		border-radius: 5px;
-		min-height: 35px;
 		grid-column: 1;
 		grid-row: 1;
 		
@@ -40,13 +51,25 @@
 	   	z-index: -1;
 	}
 	.upload {
+		height: 100%;
 		background-color: white;
 		border: none;
 		border-radius: 5px;
 		grid-column: 1;
-		grid-row: 2;
-		
+		grid-row: 2;	
 	}
+
+	.export {
+		height: 100%;
+		width: 100%;
+		background-color: white;
+		border: none;
+		border-radius: 5px;
+
+		grid-column: 1;
+		grid-row:3;
+	}
+/*------------------------------------------*/
 
 	.play {
 		height: 100%;
@@ -55,23 +78,16 @@
 		border-radius: 5px;
 
 		grid-column: 1;
-		grid-row:1;
+		grid-row-start: 1;
+		grid-row-end: 2;
 	}
 
-	.export {
-		height: 100%;
-		background-color: white;
-		border: none;
-		border-radius: 5px;
-
-		grid-column: 1;
-		grid-row:2;
-	}
+	
 
 .audio-options{
 	display: grid;
 	grid-template-columns: 100px auto auto;
-	grid-template-rows: 35px 35px;
+	grid-template-rows: 35px 35px 35px;
 	width: 100%;
 
 	grid-column-gap: 15px;
@@ -80,33 +96,41 @@
 
 .move {
 	grid-row-start: 1;
-	grid-row-end: 3;
+	grid-row-end: 4;
 	grid-column: 2;
 	display: grid;
 	grid-template-columns: auto auto;
+	grid-template-rows: 75px auto;
 }
 
 .cut {
 	grid-row-start: 1;
-	grid-row-end: 3;
+	grid-row-end: 4;
 	grid-column: 3;
 	display: grid;
 	grid-template-columns: auto auto;
+	grid-template-rows: 75px auto;
 }
 
 #text {
 	grid-column: 1;
+	grid-row-start: 1;
+	grid-row-end: 2;
 }
 
 #num_input {
 	grid-column: 2;
+	grid-row-start: 1;
+	grid-row-end: 2;
 }
 
-.btnMove, .btnCut, .export {
+.btnMove, .btnCut {
 	grid-column-start: 1;
 	grid-column-end: 3;
+	grid-row: 3;
 	background-color: white;
 	margin: 2.5px 0;
+	height: 35px;
 
 }
 .header_input{
@@ -188,7 +212,7 @@
 			padding: 0;
 			float: center;
 		}
-			.btn-action:hover, .import-audio:hover, .play:hover, .export:hover{
+			.btn-action:hover, .import-audio:hover, .play:hover, .export:hover, .upload:hover{
 				box-shadow: 1px 1px 5px #D47336;
 				cursor: pointer;
 			}
@@ -205,7 +229,7 @@
 
 	canvas {
 		position:absolute;
-		width: 100%;
+		/*width: 100%;*/
 		height: inherit;
 		background-color: transparent;
 		overflow-x: auto;

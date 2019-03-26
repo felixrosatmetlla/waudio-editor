@@ -26,18 +26,22 @@
 	<div class="index">
 		<!-- ----------- HEADER ------------- -->
 		<div class="header">
-			<form action="/" enctype="multipart/form-data" method="post" class="options">
+			<div class="options">
+				<form action="/" enctype="multipart/form-data" method="post" class="option">
 					<label for="upload-audio" class="import-audio btn"> Browse...</label>
 				    <input type="file" name="audio" value="Input" id="upload-audio">
 				    <input type="submit" value="Upload" class="upload">
-			</form> 
-				
+	    		</form> 
+	    		<button id="exportBtn" class="btn export">Export</button>
+	    		
+
+			</div>
+							
 			<div class="audio-options">
 				<button id="playBtn" class="play fa fa-play">Play</button><br>
-				<button id="exportBtn" class="btn export">Export</button>
 				
 				<!-- *****************************MOVE************************************-->
-				
+			
 				<div class="move">
 					<div id="text">
 						<strong>Clip:<br>
@@ -49,13 +53,15 @@
 					</div>
 					<button id="moveBtn" class="btn btnMove">MOVE</button>
 				</div>
+			
 
 				<!-- *****************************CUT*************************************-->
-
+			
 				<div class="cut">
 					<div id="text">
 						<strong>Clip:<br>
-						Cut on:</strong>
+						Cut from:<br>
+						Cut to:</strong>
 					</div>
 					<div id="num_input">
 						<input type="text" name="clip_to_cut" id="cutInput_clip" class="header_input"> <br>
@@ -64,7 +70,8 @@
 					</div>
 					<button id="cutBtn" class="btn btnCut">CUT</button>
 				</div>
-			</div>
+				
+			</div> <!--END AUDIO OPTIONS-->
 		</div>
 
 		<!-- ----------- TRACKS ------------- -->
