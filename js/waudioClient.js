@@ -85,7 +85,10 @@ socket.onmessage = function(message){
 function checkEditor(msg){
 	if(msg.data === 'accepted'){
 		console.log(msg);
-
+		if(msg.editorName === local_user.name && msg.editing === null){
+			var editOptions = document.querySelector('.audio-options');
+			editOptions.style.display = 'grid';
+		}
 		projectElements[msg.track]['selectionBtn-'+msg.track].innerText = local_user.name;
 		if(msg.editing!==null){
 			projectElements[msg.editing]['selectionBtn-'+msg.editing].innerText = 'Free';

@@ -27,7 +27,7 @@ app.get('/',(req, res) => {
 
 
 // It's very crucial that the file name matches the name attribute in your html
-app.post('/home/farora/www/waudio-editor/html/index.html', upload.single('audio'), (req, res) => {
+app.post('/', upload.single('audio'), (req, res) => {
     console.log(req);
   // res.sendStatus(200); //send back that everything went ok
 });

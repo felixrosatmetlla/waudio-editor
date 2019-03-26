@@ -83,7 +83,7 @@
 /*------------------------------------------*/	
 
 .audio-options{
-	display: grid; /*none -> grid*/
+	display: none; /*none -> grid*/
 	grid-template-columns: auto auto;
 	grid-template-rows: 35px 35px 35px;
 	width: 100%;
