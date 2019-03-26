@@ -817,11 +817,11 @@ function hideLogin(){ // Change display style as none to hide it
 
 //BufferLoader
 
-// var form = document.getElementById();
+var form = document.querySelector('#update-form');
 // // Maybe send a message to change the audio from /tmp/
-// form.onsubmit = function(event){
-// 	event.preventDefault();
-
+form.onsubmit = function(event){
+ 	event.preventDefault();
+}
 // 	var moveToProject = {
 // 		audioName:'',
 // 		origPath:'',

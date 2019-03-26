@@ -207,6 +207,7 @@ wsServer.on('request', function(request) {
             }
 
             else if(msg.type === 'reqEdit'){
+                console.log(msg)
                 if(projects[msg.project].audios[msg.track].editor === ''){
                     if(msg.editing!==null){
                         projects[msg.project].audios[msg.editing].editor = '';
