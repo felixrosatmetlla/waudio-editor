@@ -27,12 +27,12 @@ app.get('/',(req, res) => {
 
 
 // It's very crucial that the file name matches the name attribute in your html
-app.post('/', upload.single('audio'), (req, res) => {
+app.post('/home/farora/www/waudio-editor/html/index.html', upload.single('audio'), (req, res) => {
     console.log(req);
   // res.sendStatus(200); //send back that everything went ok
 });
 
-app.listen(3000);
+app.listen(9024);
 
 
 // Create the HTTP Server
@@ -151,13 +151,10 @@ wsServer.on('request', function(request) {
             }
 
             else if(msg.type === 'cutAudio'){
-                console.log(msg);
                 if(msg.editor === projects[msg.project].audios[msg.track].editor){
-                    console.log(projects[msg.project].audios[msg.track]['cuts'])
-                    console.log(projects[msg.project].audios[msg.track]['timeline'])
+
                     projects[msg.project].audios[msg.track]['cuts'].splice(msg.clip,1,...msg.cuts);
                     projects[msg.project].audios[msg.track]['timeline'].splice(msg.clip,1,...msg.timelines);
-                    console.log(projects[msg.project].audios[msg.track].timeline[msg.clip]);
                     var cutMsg = {
                         track: msg.track,
                         clip: msg.clip,
@@ -165,7 +162,6 @@ wsServer.on('request', function(request) {
                         cuts: msg.cuts,
                         type: 'cutAudio',
                     };
-                    console.log(cutMsg);
                     clients.map((client) =>{
                         if(client.project === msg.project){
                             client.connection.sendUTF(JSON.stringify(cutMsg));
@@ -185,7 +181,6 @@ wsServer.on('request', function(request) {
             }
 
             else if(msg.type === 'gainChange'){
-                console.log(msg);
                 if(msg.editor === projects[msg.project].audios[msg.track].editor){
                     projects[msg.project].audios[msg.track].gain = msg.gain;
                     
@@ -213,9 +208,14 @@ wsServer.on('request', function(request) {
 
             else if(msg.type === 'reqEdit'){
                 if(projects[msg.project].audios[msg.track].editor === ''){
+                    if(msg.editing!==null){
+                        projects[msg.project].audios[msg.editing].editor = '';
+                    }
+
                     var editorObj = {
                         editorName: msg.name,
                         data: 'accepted',
+                        editing: msg.editing,
                         track: msg.track,
                         type: 'editorMsg',
                     }

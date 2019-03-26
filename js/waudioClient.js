@@ -85,9 +85,12 @@ socket.onmessage = function(message){
 function checkEditor(msg){
 	if(msg.data === 'accepted'){
 		console.log(msg);
-		//TODO: Check change message
+
 		projectElements[msg.track]['selectionBtn-'+msg.track].innerText = local_user.name;
-		// projectElements[msg.track]['selectionBtn-'+msg.track].innerHTML = local_user.name;
+		if(msg.editing!==null){
+			projectElements[msg.editing]['selectionBtn-'+msg.editing].innerText = 'Free';
+		}
+
 		local_user.editingAudio = msg.track; 
 	}
 	else if(msg.data === 'denied'){
@@ -155,12 +158,13 @@ function getAudioWaveImage( url, callback, onError )
 	  }
 	  request.send();
 }
-function paintWaveform(clip, index){
-	console.log(clip);
-	var canvasContainer = document.querySelector('.track-waveform')
+function paintWaveform(clip, track_index, clip_id){
+	console.log(clip)
+	var canvasContainer = document.querySelector('#track-waveform-'+track_index);
 	var waveCanvas = document.createElement("canvas");
-	waveCanvas.id = "canvas-"+index;
+	waveCanvas.id = "canvas-"+track_index+'-'+clip_id;
 	waveCanvas.width = Math.round(clip.duration * 120); //120 samples per second
+	console.log(waveCanvas.width);
 	waveCanvas.height = 150;
 	canvasContainer.appendChild(waveCanvas);
 
@@ -198,14 +202,15 @@ function paintProject(buffersToPlay){
 	console.log(buffersToPlay)
 	buffersToPlay.map((audio,index) => {
 		trackElements(index);
-		console.log(index);
+		console.log(audio);
+
+		audio.map((clip,id)=>{
+			paintWaveform(clip,index, id);
+		})
 		
 	})
 }
-// audio.map((clip,id)=>{
-		// 	console.log(buffersToPlay[index][id])
-		// 	paintWaveform(clip,index);
-		// })
+
 
 function trackElements(index){
 	var trackDiv = document.createElement("div");
@@ -301,20 +306,23 @@ function trackElements(index){
 	editorSelection.appendChild(editorSelectButtn);
 
 	projectElements[index][editorSelectButtn.id] = editorSelectButtn;
-	projectElements[index][editorSelectButtn.id].addEventListener('click', requestEdit)
+	projectElements[index][editorSelectButtn.id].addEventListener('click',()=>{
+		requestEdit(index);
+	})
 
 }
 
-function requestEdit(){
+function requestEdit(track_id){
+
 	var reqEditTrack = {
 		id: local_user.id,
 		name: local_user.name,
 		project: local_user.project,
 		editing: local_user.editingAudio,
-		track: 0, //Search a way to tell track easily
+		track: track_id,
 		type: 'reqEdit',
 	};
-
+	console.log(reqEditTrack);
 	socket.send(JSON.stringify(reqEditTrack));
 }
 
