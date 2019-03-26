@@ -416,24 +416,21 @@ cutBtn.addEventListener('click', cutAudio);
 //TODO: Manage that we can get 2 or 3 buffers
 //TODO: Save the buffers accordingly
 function getCutBuffers(msg){
-	projectState.audios[msg.track]['cuts'].splice(msg.clip,1,msg.cuts);
-    projectState.audios[msg.track]['timeline'].splice(msg.clip,1,msg.timeline);
+	projectState.audios[msg.track]['cuts'].splice(msg.clip,1,...msg.cuts);
+    projectState.audios[msg.track]['timeline'].splice(msg.clip,1,...msg.timelines);
 
 	// var startBuffer = context.createBuffer(1, startSample - 0, 44100);
 	// var midBuffer = context.createBuffer(1, endSample - startSample, 44100);
 	// var endBuffer = context.createBuffer(1, buffers[local_user.editingAudio].length - endSample, 44100);
 	var cutBuffers=[];
+	var clipData = buffersToPlay[msg.track][msg.clip].getChannelData(0);
 	projectState.audios[msg.track].cuts.map((x,index)=>{
-		console.log(x)
-		console.log(x.end)
-		console.log(x.begin)
 		var length = x.end - x.begin;
-		console.log(length)
 		var emptyBuffer = new Float32Array(length);
 		var dummyBuffer = context.createBuffer(1, length, 44100);
 		
 		for (var i = x.begin, j=0; i < x.end; i++, j++) {
-	        var aux = data[i]
+	        var aux = clipData[i]
 	        emptyBuffer[j] = aux;
 	    }
 	    dummyBuffer.copyToChannel(emptyBuffer,0,0);
@@ -441,8 +438,8 @@ function getCutBuffers(msg){
 	    cutBuffers.push(dummyBuffer);
 	})
 
-	buffersToPlay[msg.track].splice(msg.clip, 1, cutBuffers);
-
+	// buffersToPlay[msg.track].splice(msg.clip, 1, ...cutBuffers);
+	buffersToPlay[msg.track] = cutBuffers;
 	console.log(buffersToPlay);
 }
 function cutAudio(){

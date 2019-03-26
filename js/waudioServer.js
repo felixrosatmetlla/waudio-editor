@@ -153,8 +153,10 @@ wsServer.on('request', function(request) {
             else if(msg.type === 'cutAudio'){
                 console.log(msg);
                 if(msg.editor === projects[msg.project].audios[msg.track].editor){
-                    projects[msg.project].audios[msg.track]['cuts'].splice(msg.clip,1,msg.cuts);
-                    projects[msg.project].audios[msg.track]['timeline'].splice(msg.clip,1,msg.timeline);
+                    console.log(projects[msg.project].audios[msg.track]['cuts'])
+                    console.log(projects[msg.project].audios[msg.track]['timeline'])
+                    projects[msg.project].audios[msg.track]['cuts'].splice(msg.clip,1,...msg.cuts);
+                    projects[msg.project].audios[msg.track]['timeline'].splice(msg.clip,1,...msg.timelines);
                     console.log(projects[msg.project].audios[msg.track].timeline[msg.clip]);
                     var cutMsg = {
                         track: msg.track,
