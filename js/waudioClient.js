@@ -29,7 +29,13 @@ var trackContainer = document.querySelector('.content')
 loginButton.addEventListener('click', requestProject);
 
 // Index elements
+var browser = document.getElementById('upload-audio');
 
+// Inform to user which audio has selected
+browser.change = function(){
+	var box = document.querySelector('.project_msg');
+    box.innerText = "File selected to upload: " + asd.value;
+}
 // TODO on improvements: Login Validation
 function requestProject(){
 	hideLogin();
@@ -50,6 +56,9 @@ function requestProject(){
 		name: projectName,
 		type: 'reqProj'
 	}
+
+	// To inform the user during the edition
+	document.querySelector('.current_project').innerText = "Current Project: " + projectName;
 
 	// send data
 	socket.send(JSON.stringify(userObj));
