@@ -249,6 +249,35 @@ wsServer.on('request', function(request) {
                 //TODO:Process data in own world
                 //TODO: Send Message
             }
+
+            else if(msg.type === 'uploadAudio'){
+                var newTrack = {
+                    name: '',
+                    //Track Name?
+                    // url: "C:/home/farora/www/waudio-editor/Projects/TestProject1/Migrabacion2.wav",
+                    url: 'http://ecv-etic.upf.edu/students/2019/farora/waudio-editor/Projects/tmp/'+ msg.name,
+                    // timeline: [{begin:0}], 
+                    // cuts: [{}],
+                    gain: 0.5,
+                    editor: ''
+                }
+                projects[msg.project].audios.push(newTrack);
+                var trackNum = projects[msg.project].audios.length();
+                projects[msg.project].audios[trackNum-1].name = msg.name;
+
+                newTrack['type'] = 'newTrack';
+
+                clients.map((client) =>{
+                    if(client.project === msg.project){
+                        client.connection.sendUTF(JSON.stringify(newTrack));
+                    }  
+                })
+
+            }
+
+            else if(msg.type === 'sizeChange'){
+                projects[msg.project].size = msg.newSize;
+            }
         }
     });
     
