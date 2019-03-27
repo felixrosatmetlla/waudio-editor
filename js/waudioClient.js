@@ -163,14 +163,19 @@ function getAudioWaveImage( url, callback, onError )
 	  }
 	  request.send();
 }
-function paintWaveform(clip, track_index, clip_id){
+function paintWaveform(clip, track_index, clip_id, audio_duration){
 	console.log(clip)
 	var canvasContainer = document.querySelector('#track-waveform-'+track_index);
 	var waveCanvas = document.createElement("canvas");
 	waveCanvas.id = "canvas-"+track_index+'-'+clip_id;
-	waveCanvas.width = Math.round(clip.duration * 120); //120 samples per second
+	waveCanvas.width = Math.round(clip.duration * 150); //120 samples per second
 	console.log(waveCanvas.width);
 	waveCanvas.height = 150;
+	
+	// Set init canvas position
+	var begin_pos = Math.round(sampleToTime(projectState.audios[0].cuts[1].begin) * 150);
+	waveCanvas.style.left = begin_pos + "px;";
+
 	canvasContainer.appendChild(waveCanvas);
 
 	var delta = (clip.length / waveCanvas.width);// * clip.numberOfChannels;
@@ -210,7 +215,7 @@ function paintProject(buffersToPlay){
 		console.log(audio);
 
 		audio.map((clip,id)=>{
-			paintWaveform(clip,index, id);
+			paintWaveform(clip,index, id, audio.duration);
 		})
 		
 	})
