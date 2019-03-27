@@ -80,6 +80,44 @@ socket.onmessage = function(message){
 	else if (obj_msg.type === 'editDeny'){
 		// TODO: Show in some way that you are not the editor
 	}
+	else if(obj_msg.type == 'newTrack'){
+		setNewTrack(obj_msg);
+	}
+}
+
+function setNewTrack(msg){
+	var trackNum = projectState.audios.length();
+	loadAudio(msg.url,msg, trackNum-1);
+	await new Promise((resolve, reject) => setTimeout(resolve, 1000));
+
+	var length  = buffersToPlay[trackNum-1][0].length;
+	var newTrack = {
+		name: msg.name,
+        //Track Name?
+        // url: "C:/home/farora/www/waudio-editor/Projects/TestProject1/Migrabacion2.wav",
+        url: msg.url,
+        timeline: [{begin:0, end:length}], 
+        // cuts: [{}],
+        gain: 0.5,
+        editor: ''
+	}
+	
+	projectState.audios[trackNum-1] = newTrack;
+
+	if(length > projectState.size){
+		projectState.size = length;
+
+		var newSizeMsg = {
+			project: msg.project,
+			newSize: length,
+			type: 'sizeChange'
+		}
+		paintProject(buffersToPlay)
+	}
+	else{
+		trackElements(trackNum-1);
+		paintWaveform(buffersToPlay[trackNum-1][0],trackNum-1, 0, audio.duration);
+	}
 }
 
 function checkEditor(msg){
@@ -829,10 +867,24 @@ function hideLogin(){ // Change display style as none to hide it
 //BufferLoader
 
 var form = document.querySelector('#update-form');
+var fileInput = document.getElementById('upload-audio');   
+
 // // Maybe send a message to change the audio from /tmp/
 form.onsubmit = function(event){
  	//event.preventDefault();
- 	console.log('submitted');
+
+ 	var filename = fileInput.files[0].name;
+ 	console.log(filename);
+ 	console.log(fileInput.files[0]);
+ 	console.log(event);
+
+ 	var uploadFileMsg = {
+ 		project: local_user.project,
+ 		filename: filename,
+ 		type: 'uploadAudio',
+ 	}
+
+ 	socket.send(JSON.stringify(uploadFileMsg));
 }
 // 	var moveToProject = {
 // 		audioName:'',
