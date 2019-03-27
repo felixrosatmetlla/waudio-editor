@@ -28,12 +28,20 @@ app.get('/',(req, res) => {
 
 // It's very crucial that the file name matches the name attribute in your html
 app.post('/', upload.single('audio'), (req, res) => {
-    console.log(req);
+    console.log(req.file);
+    res.status(204).send();
+    changeFileName(req.file)
     //send back that everything went ok
 });
 
 app.listen(9025);
-
+function changeFileName(fileData){
+    var path = '/Users/felixrosatmetlla/waudio-editor/js/uploads/6e378b2afbb843ed6476e446369ea658';
+    fs.rename(fileData.path, fileData.destination + '/' +fileData.originalname, function (err) {
+      if (err) throw err;
+      console.log('renamed complete');
+    });
+}
 
 // Create the HTTP Server
 var WebSocketServer = require('websocket').server;
