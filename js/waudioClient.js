@@ -168,9 +168,13 @@ function paintWaveform(clip, track_index, clip_id, audio_duration){
 	var canvasContainer = document.querySelector('#track-waveform-'+track_index);
 	var waveCanvas = document.createElement("canvas");
 	waveCanvas.id = "canvas-"+track_index+'-'+clip_id;
-	waveCanvas.width = Math.round(clip.duration * 150); //120 samples per second
+
+	// sample per second
+	var sample_per_second = projectElements[0]["track-waveform-0"].clientWidth/sampleToTime(projectState.size)
+
+	waveCanvas.width = Math.round(clip.duration * sample_per_second); //120 samples per second
 	console.log(waveCanvas.width);
-	waveCanvas.height = 150;
+	waveCanvas.height = sample_per_second;
 	
 	// Set init canvas position
 	var begin_pos = Math.round(sampleToTime(projectState.audios[0].cuts[1].begin) * 150);
