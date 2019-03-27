@@ -163,17 +163,21 @@ function getAudioWaveImage( url, callback, onError )
 	  }
 	  request.send();
 }
-function paintWaveform(clip, track_index, clip_id, audio_duration){
+function paintWaveform(clip, track_index, clip_id){
 	console.log(clip)
 	var canvasContainer = document.querySelector('#track-waveform-'+track_index);
 	var waveCanvas = document.createElement("canvas");
 	waveCanvas.id = "canvas-"+track_index+'-'+clip_id;
-	waveCanvas.width = Math.round(clip.duration * 150); //120 samples per second
+
+	// sample per second
+	var sample_per_second = projectElements[0]["track-waveform-0"].clientWidth/sampleToTime(projectState.size)
+
+	waveCanvas.width = Math.round(clip.duration * sample_per_second); //120 samples per second
 	console.log(waveCanvas.width);
 	waveCanvas.height = 150;
 	
 	// Set init canvas position
-	var begin_pos = Math.round(sampleToTime(projectState.audios[0].cuts[1].begin) * 150);
+	var begin_pos = Math.round(sampleToTime(projectState.audios[0].cuts[1].begin) * sample_per_second);
 	waveCanvas.style.left = begin_pos + "px;";
 
 	canvasContainer.appendChild(waveCanvas);
@@ -215,7 +219,7 @@ function paintProject(buffersToPlay){
 		console.log(audio);
 
 		audio.map((clip,id)=>{
-			paintWaveform(clip,index, id, audio.duration);
+			paintWaveform(clip,index, id);
 		})
 		
 	})
@@ -579,7 +583,14 @@ function changeTimelines(msg){
 
 	if(msg.size > projectState.size){
 		// TODO: Change timeline size and rerender
+		projectState.size = msg.size;
+		paintProject(buffersToPlay);
 	}
+	else{
+		paintWaveform(buffersToPlay[msg.track][msg.clip], msg.track, msg.clip)
+
+	}
+	
 }
 
 
