@@ -85,24 +85,36 @@ socket.onmessage = function(message){
 	}
 }
 
-function setNewTrack(msg){
-	var trackNum = projectState.audios.length();
-	loadAudio(msg.url,msg, trackNum-1);
-	await new Promise((resolve, reject) => setTimeout(resolve, 1000));
+async function setNewTrack(msg){
+	console.log(msg);
+	var trackNum = projectState.audios.length;
+	console.log(trackNum)
+	loadAudio(msg.url,msg, trackNum);
+	await new Promise((resolve, reject) => setTimeout(resolve, 8000));
 
-	var length  = buffersToPlay[trackNum-1][0].length;
+	var length  = buffersToPlay[trackNum][0].length;
 	var newTrack = {
 		name: msg.name,
         //Track Name?
         // url: "C:/home/farora/www/waudio-editor/Projects/TestProject1/Migrabacion2.wav",
         url: msg.url,
         timeline: [{begin:0, end:length}], 
-        // cuts: [{}],
+        cuts: [{begin:0, end:length}],
         gain: 0.5,
         editor: ''
 	}
 	
-	projectState.audios[trackNum-1] = newTrack;
+	var updateTimeCutsMsg = {
+		project: local_user.project,
+		track: trackNum,
+		timelines: newTrack.timeline,
+		cuts: newTrack.cuts,
+		type: 'updateTimeCut'
+	};
+
+	socket.send(JSON.stringify(updateTimeCutsMsg));
+
+	projectState.audios[trackNum] = newTrack;
 
 	if(length > projectState.size){
 		projectState.size = length;
@@ -112,11 +124,13 @@ function setNewTrack(msg){
 			newSize: length,
 			type: 'sizeChange'
 		}
-		paintProject(buffersToPlay)
+		// TODO: Delete Previous tracks
+		reRenderTracks();
+		// paintProject(buffersToPlay)
 	}
 	else{
-		trackElements(trackNum-1);
-		paintWaveform(buffersToPlay[trackNum-1][0],trackNum-1, 0, audio.duration);
+		trackElements(trackNum);
+		paintWaveform(buffersToPlay[trackNum][0],trackNum, 0);
 	}
 }
 
@@ -209,16 +223,19 @@ function paintWaveform(clip, track_index, clip_id){
 
 	// sample per second
 	var sample_per_second = projectElements[0]["track-waveform-0"].clientWidth/sampleToTime(projectState.size)
-
+	console.log(sample_per_second)
 	waveCanvas.width = Math.round(clip.duration * sample_per_second); //120 samples per second
 	console.log(waveCanvas.width);
 	waveCanvas.height = 150;
 	
 	// Set init canvas position
-	var begin_pos = Math.round(sampleToTime(projectState.audios[0].cuts[1].begin) * sample_per_second);
-	waveCanvas.style.left = begin_pos + "px;";
+	var begin_pos = Math.round(sampleToTime(projectState.audios[track_index].timeline[clip_id].begin) * sample_per_second);
+	console.log(sampleToTime(projectState.audios[track_index].timeline[clip_id].begin));
+	console.log(begin_pos);
+	waveCanvas.style.left = begin_pos + "px";
 
 	canvasContainer.appendChild(waveCanvas);
+	projectElements[track_index]['canvas'+'-'+clip_id] = waveCanvas;
 
 	var delta = (clip.length / waveCanvas.width);// * clip.numberOfChannels;
 	var ctx = waveCanvas.getContext("2d");
@@ -414,6 +431,7 @@ function loadAudio(url,audio, index){
 			
 			if(audio['cuts'] !== undefined){
 				// Create buffers from audios
+				buffersToPlay[index] = [];
 				audio.cuts.map((x,ind)=>{
 					var length = x.end - x.begin;
 					var emptyBuffer = new Float32Array(length);
@@ -426,6 +444,7 @@ function loadAudio(url,audio, index){
 				        emptyBuffer[j] = aux;
 				    }
 				    dummyBuffer.copyToChannel(emptyBuffer,0,0);
+
 				    buffersToPlay[index][ind]=dummyBuffer;
 				})
 			}
@@ -437,6 +456,7 @@ function loadAudio(url,audio, index){
 				buffersToPlay[index] = [];
 			    buffersToPlay[index][0]=dummyBuffer;
 			}
+			console.log(buffersToPlay)
 			buffers[index]=data;
 		}, function onError(){
 			console.log('error');
@@ -616,15 +636,41 @@ function moveAudio(){
 function checkOverlap(){
 
 }
+function reRenderTracks(){
+	deleteTracks();
+	paintProject(buffersToPlay);
+}
+
+function deleteTracks(){
+	projectElements.map((track, index) => {
+		var clipsNum = projectState.audios[index].timeline.length
+		for(i=0; i<clipsNum; i++){
+			track['canvas'+'-'+i].remove();
+		}
+
+		track['dwnBtn'+'-'+index].remove();
+		track['upBtn'+'-'+index].remove();
+		track['volBtn'+'-'+index].remove();
+		track['volume'+'-'+index].remove();
+		track['selectionBtn'+'-'+index].remove();
+		track['selection'+'-'+index].remove();
+		track['track-waveform'+'-'+index].remove();
+		track['track-name'+'-'+index].remove();
+		track['track-options'+'-'+index].remove();
+		track['pista'+'-'+index].remove();
+		track['track'+'-'+index].remove();
+	})
+}
 function changeTimelines(msg){
 	projectState['audios'][msg.track].timeline[msg.clip] = msg.timeline;
 
 	if(msg.size > projectState.size){
-		// TODO: Change timeline size and rerender
+		// TODO: Delete Previous tracks
 		projectState.size = msg.size;
-		paintProject(buffersToPlay);
+		reRenderTracks();
 	}
 	else{
+		projectElements[msg.track]['canvas'+'-'+msg.clip].remove();
 		paintWaveform(buffersToPlay[msg.track][msg.clip], msg.track, msg.clip)
 
 	}

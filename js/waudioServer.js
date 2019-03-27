@@ -36,7 +36,6 @@ app.post('/', upload.single('audio'), (req, res) => {
 
 app.listen(9025);
 function changeFileName(fileData){
-    var path = '/Users/felixrosatmetlla/waudio-editor/js/uploads/6e378b2afbb843ed6476e446369ea658';
     fs.rename(fileData.path, fileData.destination + '/' +fileData.originalname, function (err) {
       if (err) throw err;
       console.log('renamed complete');
@@ -113,7 +112,7 @@ wsServer.on('request', function(request) {
                                 // url: "C:/Users/Felix/Desktop/waudio-editor/Projects/Projects/TestProject1/Migrabacion2.wav",
                                 url: "http://ecv-etic.upf.edu/students/2019/farora/waudio-editor/Projects/TestProject1/Migrabacion2.wav",
                                 timeline: [{begin:0, end: 430496}], 
-                                // cuts: [{}],
+                                cuts: [{begin:0, end: 430496}],
                                 gain: 0.1,
                                 editor: ''
                         }
@@ -129,11 +128,9 @@ wsServer.on('request', function(request) {
             }
 
             else if(msg.type === 'moveAudio'){
-                console.log(msg);
                 if(msg.editor === projects[msg.project].audios[msg.track].editor){
                     projects[msg.project].audios[msg.track].timeline[msg.clip] = msg.timeline;
                     projects[msg.project].size = msg.size; //TODO: Maybe if
-                    console.log(projects[msg.project].audios[msg.track].timeline[msg.clip]);
                     var moveMsg = {
                         track: msg.track,
                         clip: msg.clip,
@@ -141,7 +138,6 @@ wsServer.on('request', function(request) {
                         timeline: msg.timeline,
                         type: 'moveAudio',
                     };
-                    console.log(moveMsg);
                     clients.map((client) =>{
                         if(client.project === msg.project){
                             client.connection.sendUTF(JSON.stringify(moveMsg));
@@ -252,19 +248,23 @@ wsServer.on('request', function(request) {
 
             else if(msg.type === 'uploadAudio'){
                 var newTrack = {
-                    name: '',
+                    name: msg.filename,
                     //Track Name?
                     // url: "C:/home/farora/www/waudio-editor/Projects/TestProject1/Migrabacion2.wav",
-                    url: 'http://ecv-etic.upf.edu/students/2019/farora/waudio-editor/Projects/tmp/'+ msg.name,
+                    url: 'http://ecv-etic.upf.edu/students/2019/farora/waudio-editor/Projects/tmp/'+ msg.filename,
                     // timeline: [{begin:0}], 
                     // cuts: [{}],
                     gain: 0.5,
                     editor: ''
                 }
+                var trackNum = projects[msg.project].audios.length;
                 projects[msg.project].audios.push(newTrack);
-                var trackNum = projects[msg.project].audios.length();
-                projects[msg.project].audios[trackNum-1].name = msg.name;
+                
+                
+                // projects[msg.project].audios[trackNum] = {};
+                // projects[msg.project].audios[trackNum].name = msg.filename;
 
+                console.log(projects[msg.project]);
                 newTrack['type'] = 'newTrack';
 
                 clients.map((client) =>{
@@ -277,6 +277,14 @@ wsServer.on('request', function(request) {
 
             else if(msg.type === 'sizeChange'){
                 projects[msg.project].size = msg.newSize;
+            }
+
+            else if(msg.type === 'updateTimeCut'){
+                console.log(projects[msg.project].audios[msg.track])
+                projects[msg.project].audios[msg.track]['cuts'] = [];
+                projects[msg.project].audios[msg.track]['cuts'] = msg.cuts;
+                projects[msg.project].audios[msg.track]['timeline'] = [];
+                projects[msg.project].audios[msg.track]['timeline'] = msg.timelines;
             }
         }
     });
