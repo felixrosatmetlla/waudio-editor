@@ -255,6 +255,10 @@ function paintWaveform(clip, track_index, clip_id){
 	var pos = 0;
 	var delta_ceil = Math.ceil(delta);
 	ctx.beginPath();
+
+	// Center of the track
+	var half_track = Math.floor(waveCanvas.height/2);
+	
 	for(var i = 0; i < clip.length; i += delta)
 	{
 		var min = 0;
@@ -266,9 +270,9 @@ function paintWaveform(clip, track_index, clip_id){
 			if(min > v) min = v;
 			if(max < v) max = v;
 		}
-		var y = (1 + min) * 16;
+		var y = (1 + min) * half_track;
 		ctx.moveTo( pos, y );
-		ctx.lineTo( pos, y + 16 * (max - min) );
+		ctx.lineTo( pos, y + half_track * (max - min) );
 		++pos;
 	}
 	ctx.stroke();
