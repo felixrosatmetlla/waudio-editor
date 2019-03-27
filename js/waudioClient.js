@@ -98,6 +98,8 @@ function checkEditor(msg){
 	}
 	else if(msg.data === 'denied'){
 		//TODO: Remark thta its not free
+		var msg_bar = document.querySelector('.project_msg');
+		msg_bar.innerText = 'You cannot use this track because someone else is using it.';
 	}
 }
 
