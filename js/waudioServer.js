@@ -133,6 +133,13 @@ wsServer.on('request', function(request) {
                         ],
                         type: 'project'
                     };
+                    // var project = {
+                    //     name: msg.name,
+                    //     path: '../Projects/' + msg.name,
+                    //     size: 0,
+                    //     audios:[],
+                    //     type: 'project'
+                    // };
                     projects[msg.name] = project;
                 }
                 else{

@@ -191,67 +191,6 @@ function checkEditor(msg){
 	}
 }
 
-// //Generate the Wave Image to show in the timeline
-// var wave_cache = {};
-
-// // Function by Javi Agenjo
-// function getAudioWaveImage( url, callback, onError )
-// {
-// 	if(wave_cache[url])
-// 		return wave_cache[url];
-
-// 	// window.AudioContext = window.AudioContext || window.webkitAudioContext;
-// 	// var context = ANIMED.audio_context;
-// 	// if(!context)
-// 	// 	context = ANIMED.audio_context = new AudioContext();
-
-// 	wave_cache[url] = 1;
-
-// 	var request = new XMLHttpRequest();
-// 	  request.open('GET', url, true);
-// 	  request.responseType = 'arraybuffer';
-
-// 	  // Decode asynchronously
-// 	  request.onload = function() {
-// 		context.decodeAudioData( request.response, function(buffer) {
-// 			var start_time = performance.now();
-// 			var canvas = document.createElement("canvas");
-// 			canvas.width = Math.round(buffer.duration * 120); //120 samples per second
-// 			canvas.height = 32;
-// 			document.body.appendChild(canvas);
-// 			var delta = (buffer.length / canvas.width);// * buffer.numberOfChannels;
-// 			var ctx = canvas.getContext("2d");
-// 			ctx.clearRect(0,0,canvas.width,canvas.height);
-// 			ctx.fillStyle = ctx.strokeStyle = "white";
-// 			var data = buffer.getChannelData(0);
-// 			var pos = 0;
-// 			var delta_ceil = Math.ceil(delta);
-// 			ctx.beginPath();
-// 			for(var i = 0; i < buffer.length; i += delta)
-// 			{
-// 				var min = 0;
-// 				var max = 0;
-// 				var start = Math.floor(i);
-// 				for(var j = 0; j < delta_ceil; ++j)
-// 				{
-// 					var v = data[j + start];
-// 					if(min > v) min = v;
-// 					if(max < v) max = v;
-// 				}
-// 				var y = (1 + min) * 16;
-// 				ctx.moveTo( pos, y );
-// 				ctx.lineTo( pos, y + 16 * (max - min) );
-// 				++pos;
-// 			}
-// 			ctx.stroke();
-// 			canvas.buffer = buffer;
-// 			wave_cache[url] = canvas;
-// 			console.log( "wave image generation time: " + ((performance.now() - start_time)*0.001).toFixed(3) + "s");
-// 		}, onError);
-// 	  }
-// 	  request.send();
-// }
-
 function paintWaveform(clip, track_index, clip_id){
 	var canvasContainer = document.querySelector('#track-waveform-'+track_index);
 	var waveCanvas = document.createElement("canvas");
@@ -361,7 +300,7 @@ function trackElements(index){
 	var volumeButtn = document.createElement("button");
 	volumeButtn.className = " fa fa-volume-up center-icon";
 	volumeButtn.id = "volBtn-" + index;
-	volumeButtn.innerHTML="volume"
+	// volumeButtn.innerHTML="volume"
 	volumeDiv.appendChild(volumeButtn);
 
 	projectElements[index][volumeButtn.id] = volumeButtn;
@@ -370,7 +309,7 @@ function trackElements(index){
 	var volumeUpButtn = document.createElement("button");
 	volumeUpButtn.className = " fa fa-caret-up btn-action";
 	volumeUpButtn.id = "upBtn-" + index;
-	volumeUpButtn.innerHTML="volume up"
+	// volumeUpButtn.innerHTML="volume up"
 	volumeDiv.appendChild(volumeUpButtn);
 
 	projectElements[index][volumeUpButtn.id] = volumeUpButtn;
@@ -379,7 +318,7 @@ function trackElements(index){
 	var volumeDownButtn = document.createElement("button");
 	volumeDownButtn.className = " fa fa-caret-down btn-action";
 	volumeDownButtn.id = "dwnBtn-" + index;
-	volumeDownButtn.innerHTML="volume down"
+	// volumeDownButtn.innerHTML="volume down"
 	volumeDiv.appendChild(volumeDownButtn);
 
 	projectElements[index][volumeDownButtn.id] = volumeDownButtn;
@@ -443,7 +382,8 @@ async function loadProject(projectMsg){
 	// Save Project state
 	projectState = projectMsg;
 	// Load Audios needed
-	if(projectState['audios'] === undefined){
+	console.log(projectState['audios']);
+	if(projectState['audios'].length === 0){
 		console.log('no load');
 	}
 	else{
@@ -507,19 +447,13 @@ function getAudioIndex(audioName){
 	return splitAudioName[1];
 }
 
-function checkEditMode(track){
-
-}
-
 var cutClip = document.querySelector("#cutInput_clip");
 var cutFromInput = document.querySelector("#cutInput_fromTime");
 var cutToInput = document.querySelector("#cutInput_toTime");
 var cutBtn = document.querySelector('#cutBtn');
 cutBtn.addEventListener('click', cutAudio);
 
-// TODO: remake
-//TODO: Manage that we can get 2 or 3 buffers
-//TODO: Save the buffers accordingly
+
 function getCutBuffers(msg){
 	buffersToPlay[msg.track].map((clip,id)=>{
 		projectElements[msg.track]['canvas'+'-'+id].remove();
@@ -527,9 +461,6 @@ function getCutBuffers(msg){
 	projectState.audios[msg.track]['cuts'].splice(msg.clip,1,...msg.cuts);
     projectState.audios[msg.track]['timeline'].splice(msg.clip,1,...msg.timelines);
 
-	// var startBuffer = context.createBuffer(1, startSample - 0, 44100);
-	// var midBuffer = context.createBuffer(1, endSample - startSample, 44100);
-	// var endBuffer = context.createBuffer(1, buffers[local_user.editingAudio].length - endSample, 44100);
 	var cutBuffers=[];
 	var clipData = buffersToPlay[msg.track][msg.clip].getChannelData(0);
 	projectState.audios[msg.track].cuts.map((x,index)=>{
@@ -546,10 +477,7 @@ function getCutBuffers(msg){
 	    cutBuffers.push(dummyBuffer);
 	})
 
-	// buffersToPlay[msg.track].splice(msg.clip, 1, ...cutBuffers);
 	buffersToPlay[msg.track] = cutBuffers;
-
-
 
 	buffersToPlay[msg.track].map((clip,id)=>{
 		paintWaveform(clip,msg.track, id);
@@ -609,8 +537,6 @@ function cutAudio(){
 		bufferTimes=[startBufferTime, midBufferTime, endBufferTime];
 	}
 
-	
-
 	var cutMsg = {
 		editorId: local_user.id,
 		editor: local_user.name,
@@ -635,9 +561,6 @@ function sampleToTime(sample){
 	return time;
 }
 
-// function processProjectChanges(){
-
-// }
 var moveToInput = document.querySelector("#moveInput_time");
 var clipMoveInput = document.querySelector('#moveInput_clip');
 var moveBtn = document.querySelector('#moveBtn');
@@ -729,47 +652,47 @@ function changeTimelines(msg){
 var playButton = document.querySelector('#playBtn');
 playButton.addEventListener('click', getPlayAudio);
 
-function prepareToPlay(){ //Function that prepares the buffers to play them in time and order
-	//TODO: Get timelines and gain to play here and delete global variable
-	var gains = [];
-	var timelines = [[]];
-	projectState.audios.map((audio,index)=>{
-		console.log(audio)
-		console.log(index)
-		gains[index] = audio.gain;
-		timelines[index] = [];
-		audio.timeline.map((time,ind) => {
-			console.log(time)
-			timelines[index][ind] = time;
-		})
-	})
+// function prepareToPlay(){ //Function that prepares the buffers to play them in time and order
+// 	//TODO: Get timelines and gain to play here and delete global variable
+// 	var gains = [];
+// 	var timelines = [[]];
+// 	projectState.audios.map((audio,index)=>{
+// 		console.log(audio)
+// 		console.log(index)
+// 		gains[index] = audio.gain;
+// 		timelines[index] = [];
+// 		audio.timeline.map((time,ind) => {
+// 			console.log(time)
+// 			timelines[index][ind] = time;
+// 		})
+// 	})
 
 
-	buffersToPlay.map((track, index) =>{
-		track.map((buffer,ind)=>{
-			playAudio(buffer, timelines[index][ind], gains[index]);
-		})
-	})
-}
+// 	buffersToPlay.map((track, index) =>{
+// 		track.map((buffer,ind)=>{
+// 			playAudio(buffer, timelines[index][ind], gains[index]);
+// 		})
+// 	})
+// }
 
-function playAudio(buffer, timeline, gain){
-	var beginTime = sampleToTime(timeline.begin)
-	var endTime = sampleToTime(timeline.end)
-	console.log(beginTime)
-	console.log(endTime)
-	let source = context.createBufferSource();
-	source.buffer = buffer;
-	let gainNode = context.createGain();
-	source.connect(gainNode);
-	gainNode.connect(context.destination);
-	gainNode.gain.value = gain;
-	source.start(beginTime);
-	source.stop(endTime);
-}
+// function playAudio(buffer, timeline, gain){
+// 	var beginTime = sampleToTime(timeline.begin)
+// 	var endTime = sampleToTime(timeline.end)
+// 	console.log(beginTime)
+// 	console.log(endTime)
+// 	let source = context.createBufferSource();
+// 	source.buffer = buffer;
+// 	let gainNode = context.createGain();
+// 	source.connect(gainNode);
+// 	gainNode.connect(context.destination);
+// 	gainNode.gain.value = gain;
+// 	source.start(beginTime);
+// 	source.stop(endTime);
+// }
 
-function pauseAudio(source){
-	source.stop(context.currentTime + 1);
-}
+// function pauseAudio(source){
+// 	source.stop(context.currentTime + 1);
+// }
 
 var exportButton = document.querySelector('#exportBtn');
 exportButton.addEventListener('click', exportAudio);
@@ -1001,8 +924,6 @@ function hideLogin(){ // Change display style as none to hide it
 	loginPage.style.display = "none"; 
 }
 
-//BufferLoader
-
 var form = document.querySelector('#update-form');
 var fileInput = document.getElementById('upload-audio');   
 
@@ -1023,86 +944,3 @@ form.onsubmit = function(event){
 
  	socket.send(JSON.stringify(uploadFileMsg));
 }
-// 	var moveToProject = {
-// 		audioName:'',
-// 		origPath:'',
-// 		destPath:'',
-
-// 	}
-// }
-
-// var form = document.getElementById('file-form');
-// var fileSelect = document.getElementById('file-select');
-// var uploadButton = document.getElementById('upload-button');
-
-// form.onsubmit = function(event) {
-// 	event.preventDefault();
-
-// 	// Update button text.
-// 	uploadButton.innerHTML = 'Uploading...';
-
-// 	// Get the selected files from the input.
-// 	var files = fileSelect.files;
-
-// 	// Create a new FormData object.
-// 	var formData = new FormData();
-
-// 	// Loop through each of the selected files.
-// 	for (var i = 0; i < files.length; i++) {
-// 		var file = files[i];
-
-// 		// Check the file type.
-// 		if (!file.type.match('image.*')) {
-// 			continue;
-// 		}
-
-// 		// Add the file to the request.
-// 		formData.append('audios[]', file, file.name);
-// 	}
-
-// 	// Set up the request.
-// 	var request = new XMLHttpRequest();
-
-// 	// Open the connection.
-// 	request.open('POST', '/Upload', true);
-
-// 	// Set up a handler for when the request finishes.
-// 	request.onload = function () {
-// 		if (request.status === 200) {
-// 		// File(s) uploaded.
-// 			uploadButton.innerHTML = 'Upload';
-// 		} 
-// 		else {
-// 			alert('An error occurred!');
-// 		}
-// 	};
-
-// 	// Send the Data.
-// 	request.send(formData);
-// }
-
-// let soundBlob = soundFile.getBlob(); //get the recorded soundFile's blob & store it in a variable
-
-// let formdata = new FormData() ; //create a from to of data to upload to the server
-// formdata.append('soundBlob', soundBlob,  'myfiletosave.wav') ; // append the sound blob and the name of the file. third argument will show up on the server as req.file.originalname
-
-//   // Now we can send the blob to a server...
-// var serverUrl = '/upload'; //we've made a POST endpoint on the server at /upload
-// //build a HTTP POST request
-// var httpRequestOptions = {
-// 	method: 'POST',
-// 	body: formdata , // with our form data packaged above
-// 	headers: new Headers({
-// 	  'enctype': 'multipart/form-data' // the enctype is important to work with multer on the server
-// 	})
-// };
-// // console.log(httpRequestOptions);
-// // use p5 to make the POST request at our URL and with our options
-// httpDo(
-// serverUrl,
-// httpRequestOptions,
-// (successStatusCode)=>{ //if we were successful...
-//   console.log("uploaded recording successfully: " + successStatusCode)
-// },
-// (error)=>{console.error(error);}
-// )
