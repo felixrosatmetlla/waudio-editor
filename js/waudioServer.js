@@ -86,9 +86,23 @@ wsServer.on('request', function(request) {
                     id: id,
                     name: msg.name,
                     project: msg.project,
+                    editing: msg.track,
                     connection: connection
                 };
-                clients.push(clientObj);
+
+                var userMsg = {
+                    id: id,
+                    name: msg.name,
+                    project: msg.project,
+                    type: 'user'
+                }
+
+                clients[id] = clientObj;
+                clients.map((client) =>{
+                    if(client.project === msg.project){
+                        client.connection.sendUTF(JSON.stringify(userMsg));
+                    }  
+                })
             }
 
             else if (msg.type === 'reqProj'){
@@ -225,6 +239,7 @@ wsServer.on('request', function(request) {
                         type: 'editorMsg',
                     }
 
+                    clients[id].editing = msg.track;
                     projects[msg.project].audios[msg.track].editor = msg.name;
                     
                     clients.map((client) =>{
@@ -292,7 +307,23 @@ wsServer.on('request', function(request) {
     
     // When a user closes connecton with the server
     connection.on('close', function(connection) {
-        
+        var disc_msg = {
+            id: id,
+            name: clients[id].name,
+            project: clients[id].project,
+            editing: clients[id].editing,
+            type: 'disconnection'
+        }
+
+        if(clients[id].editing !== null){
+            projects[clients[id].project].audios[clients[id].editing].editor = '';
+        }
+
+        clients.map((client) =>{
+            if(client.project === clients[id].project){
+                client.connection.sendUTF(JSON.stringify(disc_msg));
+            }  
+        })
     });
 
 });
