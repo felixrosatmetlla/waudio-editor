@@ -450,7 +450,7 @@ async function loadProject(projectMsg){
 		projectMsg.audios.map((x,index) => {
 		 	loadAudio(projectMsg.audios[index].url,x, index);
 		})
-		await new Promise((resolve, reject) => setTimeout(resolve, 1000));
+		await new Promise((resolve, reject) => setTimeout(resolve, 8000));
 		paintProject(buffersToPlay);
 	}
 	
