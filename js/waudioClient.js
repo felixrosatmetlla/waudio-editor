@@ -185,15 +185,11 @@ function checkEditor(msg){
 	else if(msg.data === 'denied'){
 		//TODO: Remark thta its not free
 		var msg_bar = document.querySelector('.project_msg');
-<<<<<<< HEAD
-		msg.editorName === projectState.audios[msg.track].editor;
-		msg_bar.innerText = 'You cannot use this track because someone else is using it.';
-											
-=======
+
 		if(msg.editorName === projectState.audios[msg.track].editor){ 
 			msg_bar.innerText = 'You cannot use this track because someone else is using it.'
 		}									
->>>>>>> origin/master
+
 	}
 }
 
@@ -953,8 +949,7 @@ form.onsubmit = function(event){
 
  	socket.send(JSON.stringify(uploadFileMsg));
 }
-<<<<<<< HEAD
-=======
+
 
 function drawTimeline(maxValue, large){
   var chart = new CanvasJS.Chart("timeline", {
@@ -1070,4 +1065,4 @@ function drawTimeline(maxValue, large){
 // },
 // (error)=>{console.error(error);}
 // )
->>>>>>> origin/master
+
