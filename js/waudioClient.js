@@ -34,7 +34,7 @@ var browser = document.getElementById('upload-audio');
 // Inform to user which audio has selected
 browser.change = function(){
 	var box = document.querySelector('.project_msg');
-    box.innerText = "File selected to upload: " + asd.value;
+    box.innerText = "File selected to upload: " + box.value;
 }
 // TODO on improvements: Login Validation
 function requestProject(){
@@ -773,7 +773,7 @@ function getFinalAudio(){
 
 function make_download(abuffer, total_samples) {
 	console.log(abuffer);
-	var container = document.querySelector('.options');
+	var container = document.querySelector('.project_msg');
 
 	// set sample length and rate
 	var duration = abuffer.duration,
