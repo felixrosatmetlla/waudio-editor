@@ -237,6 +237,7 @@ wsServer.on('request', function(request) {
                     var deniedEdit = {
                         editorName: projects[msg.project].audios[msg.track].editor,
                         data: 'denied',
+                        track: msg.track,
                         type: 'editorMsg',
                     }
 

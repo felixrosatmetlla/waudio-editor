@@ -145,22 +145,22 @@ async function setNewTrack(msg){
 
 function checkEditor(msg){
 	if(msg.data === 'accepted'){
-		console.log(msg);
 		if(msg.editorName === local_user.name && msg.editing === null){
 			var editOptions = document.querySelector('.audio-options');
 			editOptions.style.display = 'grid';
+			local_user.editingAudio = msg.track; 
 		}
-		projectElements[msg.track]['selectionBtn-'+msg.track].innerText = local_user.name;
+		projectState.audios[msg.track].editor = msg.editorName;
+		projectElements[msg.track]['selectionBtn-'+msg.track].innerText = msg.editorName;
 		if(msg.editing!==null){
 			projectElements[msg.editing]['selectionBtn-'+msg.editing].innerText = 'Free';
-		}
-
-		local_user.editingAudio = msg.track; 
+		}	
 	}
 	else if(msg.data === 'denied'){
 		//TODO: Remark thta its not free
 		var msg_bar = document.querySelector('.project_msg');
-		msg_bar.innerText = 'You cannot use this track because someone else is using it.';
+		msg.editorName === projectState.audios[msg.track].editor && msg_bar.innerText = 'You cannot use this track because someone else is using it.'
+											
 	}
 }
 
@@ -225,22 +225,18 @@ function getAudioWaveImage( url, callback, onError )
 	  request.send();
 }
 function paintWaveform(clip, track_index, clip_id){
-	console.log(clip)
 	var canvasContainer = document.querySelector('#track-waveform-'+track_index);
 	var waveCanvas = document.createElement("canvas");
 	waveCanvas.id = "canvas-"+track_index+'-'+clip_id;
 
 	// sample per second
 	var sample_per_second = projectElements[0]["track-waveform-0"].clientWidth/sampleToTime(projectState.size)
-	console.log(sample_per_second)
 	waveCanvas.width = Math.round(clip.duration * sample_per_second); //120 samples per second
-	console.log(waveCanvas.width);
 	waveCanvas.height = 150;
 	
 	// Set init canvas position
 	var begin_pos = Math.round(sampleToTime(projectState.audios[track_index].timeline[clip_id].begin) * sample_per_second);
-	console.log(sampleToTime(projectState.audios[track_index].timeline[clip_id].begin));
-	console.log(begin_pos);
+
 	waveCanvas.style.left = begin_pos + "px";
 
 	canvasContainer.appendChild(waveCanvas);
@@ -277,10 +273,8 @@ function paintWaveform(clip, track_index, clip_id){
 
 //Fiund a way to do it and paint it
 function paintProject(buffersToPlay){
-	console.log(buffersToPlay)
 	buffersToPlay.map((audio,index) => {
 		trackElements(index);
-		console.log(audio);
 
 		audio.map((clip,id)=>{
 			paintWaveform(clip,index, id);
@@ -380,7 +374,9 @@ function trackElements(index){
 	var editorSelectButtn = document.createElement("button");
 	editorSelectButtn.className = " btn user-selected";
 	editorSelectButtn.id = "selectionBtn-"+index;
-	editorSelectButtn.innerHTML = "Free";	
+	console.log(projectState.audios[index].editor)
+	projectState.audios[index].editor == '' ? editorSelectButtn.innerHTML = "Free" : editorSelectButtn.innerHTML = projectState.audios[index].editor
+		
 	editorSelection.appendChild(editorSelectButtn);
 
 	projectElements[index][editorSelectButtn.id] = editorSelectButtn;
@@ -493,6 +489,9 @@ cutBtn.addEventListener('click', cutAudio);
 //TODO: Manage that we can get 2 or 3 buffers
 //TODO: Save the buffers accordingly
 function getCutBuffers(msg){
+	buffersToPlay[msg.track].map((clip,id)=>{
+		projectElements[msg.track]['canvas'+'-'+id].remove();
+	});
 	projectState.audios[msg.track]['cuts'].splice(msg.clip,1,...msg.cuts);
     projectState.audios[msg.track]['timeline'].splice(msg.clip,1,...msg.timelines);
 
@@ -517,6 +516,14 @@ function getCutBuffers(msg){
 
 	// buffersToPlay[msg.track].splice(msg.clip, 1, ...cutBuffers);
 	buffersToPlay[msg.track] = cutBuffers;
+
+
+
+	buffersToPlay[msg.track].map((clip,id)=>{
+		paintWaveform(clip,msg.track, id);
+	})
+
+
 }
 function cutAudio(){
 	var startTime = parseFloat(cutFromInput.value);
@@ -688,7 +695,7 @@ function changeTimelines(msg){
 
 
 var playButton = document.querySelector('#playBtn');
-playButton.addEventListener('click', prepareToPlay);
+playButton.addEventListener('click', getPlayAudio);
 
 function prepareToPlay(){ //Function that prepares the buffers to play them in time and order
 	//TODO: Get timelines and gain to play here and delete global variable
@@ -734,7 +741,38 @@ function pauseAudio(source){
 
 var exportButton = document.querySelector('#exportBtn');
 exportButton.addEventListener('click', exportAudio);
+function getPlayAudio(){
+	var fileSize = projectState.size;
+	var finalAudio = new Float32Array(fileSize);
+	var finalAudioBuffer = context.createBuffer(1, fileSize, 44100);
 
+	console.log('To initiate');
+	buffersToPlay.map((track, index) => {
+			console.log('Track');
+		buffersToPlay[index].map((clip,id)=>{
+			var dummyBuffer = new Float32Array(fileSize);
+			var clipTimeline = projectState.audios[index].timeline[id];
+			var clipData = clip.getChannelData(0);
+			console.log('clip')
+			for(var i=clipTimeline.begin, j=0; i<clipTimeline.end; i++, j++){
+				dummyBuffer[i] = clipData[j];
+			}
+
+			for(var i=0; i<fileSize; i++){
+				finalAudio[i] = finalAudio[i] + dummyBuffer[i];
+			}
+
+		})
+	})
+
+	finalAudioBuffer.copyToChannel(finalAudio,0,0);
+	let source = context.createBufferSource();
+	source.buffer = finalAudioBuffer;
+	source.connect(context.destination);
+	source.start(0);
+
+	
+}
 function exportAudio(){
 	console.log('exporting')
 	getFinalAudio();
