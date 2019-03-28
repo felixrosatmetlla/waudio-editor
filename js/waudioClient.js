@@ -185,9 +185,15 @@ function checkEditor(msg){
 	else if(msg.data === 'denied'){
 		//TODO: Remark thta its not free
 		var msg_bar = document.querySelector('.project_msg');
+<<<<<<< HEAD
+		msg.editorName === projectState.audios[msg.track].editor;
+		msg_bar.innerText = 'You cannot use this track because someone else is using it.';
+											
+=======
 		if(msg.editorName === projectState.audios[msg.track].editor){ 
 			msg_bar.innerText = 'You cannot use this track because someone else is using it.'
 		}									
+>>>>>>> origin/master
 	}
 }
 
@@ -197,10 +203,13 @@ function paintWaveform(clip, track_index, clip_id){
 	waveCanvas.id = "canvas-"+track_index+'-'+clip_id;
 
 	// sample per second
-	var sample_per_second = projectElements[0]["track-waveform-0"].clientWidth/sampleToTime(projectState.size)
+	var sample_per_second = projectElements[0]["track-waveform-0"].clientWidth/sampleToTime(projectState.size);
 	waveCanvas.width = Math.round(clip.duration * sample_per_second); //120 samples per second
 	waveCanvas.height = 150;
 	
+	// draw Timeline
+	drawTimeline(sampleToTime(projectState.size),projectElements[0]["track-waveform-0"].clientWidth+20);
+
 	// Set init canvas position
 	var begin_pos = Math.round(sampleToTime(projectState.audios[track_index].timeline[clip_id].begin) * sample_per_second);
 
@@ -944,3 +953,121 @@ form.onsubmit = function(event){
 
  	socket.send(JSON.stringify(uploadFileMsg));
 }
+<<<<<<< HEAD
+=======
+
+function drawTimeline(maxValue, large){
+  var chart = new CanvasJS.Chart("timeline", {
+        width: large,
+        height: 40,
+        backgroundColor: "",
+        axisX: [{
+          lineColor: "#C24642",
+          minimum: 0,
+          maximum: maxValue,
+                  }],
+        axisY:{
+          title: "",
+          tickLength: 0,
+          lineThickness:0,
+          margin:0,
+          valueFormatString:" " //comment this to show numeric values
+      },
+
+        data: [
+        {
+          type: "line",
+          dataPoints: [
+            {x: 1},
+          ]
+        }, ]
+      });
+      chart.width = large + "px";
+      chart.render();
+
+      document.querySelector('a.canvasjs-chart-credit').remove();
+}
+// 	var moveToProject = {
+// 		audioName:'',
+// 		origPath:'',
+// 		destPath:'',
+
+// 	}
+// }
+
+// var form = document.getElementById('file-form');
+// var fileSelect = document.getElementById('file-select');
+// var uploadButton = document.getElementById('upload-button');
+
+// form.onsubmit = function(event) {
+// 	event.preventDefault();
+
+// 	// Update button text.
+// 	uploadButton.innerHTML = 'Uploading...';
+
+// 	// Get the selected files from the input.
+// 	var files = fileSelect.files;
+
+// 	// Create a new FormData object.
+// 	var formData = new FormData();
+
+// 	// Loop through each of the selected files.
+// 	for (var i = 0; i < files.length; i++) {
+// 		var file = files[i];
+
+// 		// Check the file type.
+// 		if (!file.type.match('image.*')) {
+// 			continue;
+// 		}
+
+// 		// Add the file to the request.
+// 		formData.append('audios[]', file, file.name);
+// 	}
+
+// 	// Set up the request.
+// 	var request = new XMLHttpRequest();
+
+// 	// Open the connection.
+// 	request.open('POST', '/Upload', true);
+
+// 	// Set up a handler for when the request finishes.
+// 	request.onload = function () {
+// 		if (request.status === 200) {
+// 		// File(s) uploaded.
+// 			uploadButton.innerHTML = 'Upload';
+// 		} 
+// 		else {
+// 			alert('An error occurred!');
+// 		}
+// 	};
+
+// 	// Send the Data.
+// 	request.send(formData);
+// }
+
+// let soundBlob = soundFile.getBlob(); //get the recorded soundFile's blob & store it in a variable
+
+// let formdata = new FormData() ; //create a from to of data to upload to the server
+// formdata.append('soundBlob', soundBlob,  'myfiletosave.wav') ; // append the sound blob and the name of the file. third argument will show up on the server as req.file.originalname
+
+//   // Now we can send the blob to a server...
+// var serverUrl = '/upload'; //we've made a POST endpoint on the server at /upload
+// //build a HTTP POST request
+// var httpRequestOptions = {
+// 	method: 'POST',
+// 	body: formdata , // with our form data packaged above
+// 	headers: new Headers({
+// 	  'enctype': 'multipart/form-data' // the enctype is important to work with multer on the server
+// 	})
+// };
+// // console.log(httpRequestOptions);
+// // use p5 to make the POST request at our URL and with our options
+// httpDo(
+// serverUrl,
+// httpRequestOptions,
+// (successStatusCode)=>{ //if we were successful...
+//   console.log("uploaded recording successfully: " + successStatusCode)
+// },
+// (error)=>{console.error(error);}
+// )
+>>>>>>> origin/master
