@@ -48,6 +48,7 @@ function requestProject(){
 	var username = usernameInput.value;
 	var userObj = {
 		name: username,
+		track: local_user.editingAudio,
 		project: projectName,
 		type: 'user'
 	}
@@ -91,6 +92,31 @@ socket.onmessage = function(message){
 	}
 	else if(obj_msg.type == 'newTrack'){
 		setNewTrack(obj_msg);
+	}
+	else if(obj_msg.type === 'user'){
+		checkUser(obj_msg);
+	}
+	else if(obj_msg.type === 'disconnection'){
+		disconnectedUser(obj_msg);
+	}
+}
+
+function disconnectedUser(msg){
+	var msg_bar = document.querySelector('.project_msg');
+	msg_bar.innerText = msg.name + ' has disconnected.'
+	console.log(msg)
+	if(msg.editing !== null){
+		projectElements[msg.editing]['selectionBtn-'+msg.editing].innerText = 'Free';
+	}
+}
+
+function checkUser(msg){
+	if(msg.name === local_user.name){
+		local_user.id = msg.id;
+	}
+	else{
+		var msg_bar = document.querySelector('.project_msg');
+		msg_bar.innerText = msg.name + ' has connected.'
 	}
 }
 
@@ -159,72 +185,79 @@ function checkEditor(msg){
 	else if(msg.data === 'denied'){
 		//TODO: Remark thta its not free
 		var msg_bar = document.querySelector('.project_msg');
+<<<<<<< HEAD
 		msg.editorName === projectState.audios[msg.track].editor;
 		msg_bar.innerText = 'You cannot use this track because someone else is using it.';
 											
+=======
+		if(msg.editorName === projectState.audios[msg.track].editor){ 
+			msg_bar.innerText = 'You cannot use this track because someone else is using it.'
+		}									
+>>>>>>> origin/master
 	}
 }
 
-//Generate the Wave Image to show in the timeline
-var wave_cache = {};
+// //Generate the Wave Image to show in the timeline
+// var wave_cache = {};
 
-// Function by Javi Agenjo
-function getAudioWaveImage( url, callback, onError )
-{
-	if(wave_cache[url])
-		return wave_cache[url];
+// // Function by Javi Agenjo
+// function getAudioWaveImage( url, callback, onError )
+// {
+// 	if(wave_cache[url])
+// 		return wave_cache[url];
 
-	// window.AudioContext = window.AudioContext || window.webkitAudioContext;
-	// var context = ANIMED.audio_context;
-	// if(!context)
-	// 	context = ANIMED.audio_context = new AudioContext();
+// 	// window.AudioContext = window.AudioContext || window.webkitAudioContext;
+// 	// var context = ANIMED.audio_context;
+// 	// if(!context)
+// 	// 	context = ANIMED.audio_context = new AudioContext();
 
-	wave_cache[url] = 1;
+// 	wave_cache[url] = 1;
 
-	var request = new XMLHttpRequest();
-	  request.open('GET', url, true);
-	  request.responseType = 'arraybuffer';
+// 	var request = new XMLHttpRequest();
+// 	  request.open('GET', url, true);
+// 	  request.responseType = 'arraybuffer';
 
-	  // Decode asynchronously
-	  request.onload = function() {
-		context.decodeAudioData( request.response, function(buffer) {
-			var start_time = performance.now();
-			var canvas = document.createElement("canvas");
-			canvas.width = Math.round(buffer.duration * 120); //120 samples per second
-			canvas.height = 32;
-			document.body.appendChild(canvas);
-			var delta = (buffer.length / canvas.width);// * buffer.numberOfChannels;
-			var ctx = canvas.getContext("2d");
-			ctx.clearRect(0,0,canvas.width,canvas.height);
-			ctx.fillStyle = ctx.strokeStyle = "white";
-			var data = buffer.getChannelData(0);
-			var pos = 0;
-			var delta_ceil = Math.ceil(delta);
-			ctx.beginPath();
-			for(var i = 0; i < buffer.length; i += delta)
-			{
-				var min = 0;
-				var max = 0;
-				var start = Math.floor(i);
-				for(var j = 0; j < delta_ceil; ++j)
-				{
-					var v = data[j + start];
-					if(min > v) min = v;
-					if(max < v) max = v;
-				}
-				var y = (1 + min) * 16;
-				ctx.moveTo( pos, y );
-				ctx.lineTo( pos, y + 16 * (max - min) );
-				++pos;
-			}
-			ctx.stroke();
-			canvas.buffer = buffer;
-			wave_cache[url] = canvas;
-			console.log( "wave image generation time: " + ((performance.now() - start_time)*0.001).toFixed(3) + "s");
-		}, onError);
-	  }
-	  request.send();
-}
+// 	  // Decode asynchronously
+// 	  request.onload = function() {
+// 		context.decodeAudioData( request.response, function(buffer) {
+// 			var start_time = performance.now();
+// 			var canvas = document.createElement("canvas");
+// 			canvas.width = Math.round(buffer.duration * 120); //120 samples per second
+// 			canvas.height = 32;
+// 			document.body.appendChild(canvas);
+// 			var delta = (buffer.length / canvas.width);// * buffer.numberOfChannels;
+// 			var ctx = canvas.getContext("2d");
+// 			ctx.clearRect(0,0,canvas.width,canvas.height);
+// 			ctx.fillStyle = ctx.strokeStyle = "white";
+// 			var data = buffer.getChannelData(0);
+// 			var pos = 0;
+// 			var delta_ceil = Math.ceil(delta);
+// 			ctx.beginPath();
+// 			for(var i = 0; i < buffer.length; i += delta)
+// 			{
+// 				var min = 0;
+// 				var max = 0;
+// 				var start = Math.floor(i);
+// 				for(var j = 0; j < delta_ceil; ++j)
+// 				{
+// 					var v = data[j + start];
+// 					if(min > v) min = v;
+// 					if(max < v) max = v;
+// 				}
+// 				var y = (1 + min) * 16;
+// 				ctx.moveTo( pos, y );
+// 				ctx.lineTo( pos, y + 16 * (max - min) );
+// 				++pos;
+// 			}
+// 			ctx.stroke();
+// 			canvas.buffer = buffer;
+// 			wave_cache[url] = canvas;
+// 			console.log( "wave image generation time: " + ((performance.now() - start_time)*0.001).toFixed(3) + "s");
+// 		}, onError);
+// 	  }
+// 	  request.send();
+// }
+
 function paintWaveform(clip, track_index, clip_id){
 	var canvasContainer = document.querySelector('#track-waveform-'+track_index);
 	var waveCanvas = document.createElement("canvas");
@@ -426,7 +459,7 @@ async function loadProject(projectMsg){
 		projectMsg.audios.map((x,index) => {
 		 	loadAudio(projectMsg.audios[index].url,x, index);
 		})
-		await new Promise((resolve, reject) => setTimeout(resolve, 1000));
+		await new Promise((resolve, reject) => setTimeout(resolve, 8000));
 		paintProject(buffersToPlay);
 	}
 	
@@ -749,13 +782,15 @@ function pauseAudio(source){
 
 var exportButton = document.querySelector('#exportBtn');
 exportButton.addEventListener('click', exportAudio);
+
 function getPlayAudio(){
 	var fileSize = projectState.size;
-	var finalAudio = new Float32Array(fileSize);
-	var finalAudioBuffer = context.createBuffer(1, fileSize, 44100);
 
 	console.log('To initiate');
 	buffersToPlay.map((track, index) => {
+		
+		var finalAudio = new Float32Array(fileSize);
+		var finalAudioBuffer = context.createBuffer(1, fileSize, 44100);
 			console.log('Track');
 		buffersToPlay[index].map((clip,id)=>{
 			var dummyBuffer = new Float32Array(fileSize);
@@ -769,15 +804,16 @@ function getPlayAudio(){
 			for(var i=0; i<fileSize; i++){
 				finalAudio[i] = finalAudio[i] + dummyBuffer[i];
 			}
-
 		})
+		finalAudioBuffer.copyToChannel(finalAudio,0,0);
+		let source = context.createBufferSource();
+		let gainNode = context.createGain();
+		source.buffer = finalAudioBuffer;
+		source.connect(gainNode);
+		gainNode.gain.value = projectState.audios[index].gain;
+		gainNode.connect(context.destination);
+		source.start(0);
 	})
-
-	finalAudioBuffer.copyToChannel(finalAudio,0,0);
-	let source = context.createBufferSource();
-	source.buffer = finalAudioBuffer;
-	source.connect(context.destination);
-	source.start(0);
 
 	
 }
@@ -899,7 +935,16 @@ function changeGain(gainValue, track){ //By Message(update from other users chan
 }
 
 function mute(){
+	var gainMsg = {
+		editorId: local_user.id,
+		editor: local_user.name,
+		project: local_user.project,
+		track: local_user.editingAudio, 
+		gain: 0,
+		type: 'gainChange',
+	};
 
+	socket.send(JSON.stringify(gainMsg));
 }
 
 // TODO: Merge increase and decrease into one function
