@@ -159,7 +159,8 @@ function checkEditor(msg){
 	else if(msg.data === 'denied'){
 		//TODO: Remark thta its not free
 		var msg_bar = document.querySelector('.project_msg');
-		msg.editorName === projectState.audios[msg.track].editor && msg_bar.innerText = 'You cannot use this track because someone else is using it.'
+		msg.editorName === projectState.audios[msg.track].editor;
+		msg_bar.innerText = 'You cannot use this track because someone else is using it.';
 											
 	}
 }
@@ -230,10 +231,13 @@ function paintWaveform(clip, track_index, clip_id){
 	waveCanvas.id = "canvas-"+track_index+'-'+clip_id;
 
 	// sample per second
-	var sample_per_second = projectElements[0]["track-waveform-0"].clientWidth/sampleToTime(projectState.size)
+	var sample_per_second = projectElements[0]["track-waveform-0"].clientWidth/sampleToTime(projectState.size);
 	waveCanvas.width = Math.round(clip.duration * sample_per_second); //120 samples per second
 	waveCanvas.height = 150;
 	
+	// draw Timeline
+	drawTimeline(sampleToTime(projectState.size),projectElements[0]["track-waveform-0"].clientWidth+20);
+
 	// Set init canvas position
 	var begin_pos = Math.round(sampleToTime(projectState.audios[track_index].timeline[clip_id].begin) * sample_per_second);
 
@@ -982,6 +986,38 @@ form.onsubmit = function(event){
  	}
 
  	socket.send(JSON.stringify(uploadFileMsg));
+}
+
+function drawTimeline(maxValue, large){
+  var chart = new CanvasJS.Chart("timeline", {
+        width: large,
+        height: 40,
+        backgroundColor: "",
+        axisX: [{
+          lineColor: "#C24642",
+          minimum: 0,
+          maximum: maxValue,
+                  }],
+        axisY:{
+          title: "",
+          tickLength: 0,
+          lineThickness:0,
+          margin:0,
+          valueFormatString:" " //comment this to show numeric values
+      },
+
+        data: [
+        {
+          type: "line",
+          dataPoints: [
+            {x: 1},
+          ]
+        }, ]
+      });
+      chart.width = large + "px";
+      chart.render();
+
+      document.querySelector('a.canvasjs-chart-credit').remove();
 }
 // 	var moveToProject = {
 // 		audioName:'',
