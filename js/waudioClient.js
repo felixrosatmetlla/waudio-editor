@@ -236,7 +236,7 @@ function paintWaveform(clip, track_index, clip_id){
 	waveCanvas.height = 150;
 	
 	// draw Timeline
-	drawTimeline(sampleToTime(projectState.size),Math.round(clip.duration * sample_per_second));
+	drawTimeline(sampleToTime(projectState.size),projectElements[0]["track-waveform-0"].clientWidth+20);
 
 	// Set init canvas position
 	var begin_pos = Math.round(sampleToTime(projectState.audios[track_index].timeline[clip_id].begin) * sample_per_second);
