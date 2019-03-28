@@ -491,69 +491,86 @@ function getCutBuffers(msg){
 
 }
 function cutAudio(){
-	var startTime = parseFloat(cutFromInput.value);
-	var startSample = timeToSample(startTime);
-	
-	var endTime = parseFloat(cutToInput.value);
-	var endSample = timeToSample(endTime);
+	if(local_user.editingAudio !== null){
+		var startTime = parseFloat(cutFromInput.value);
+		var startSample = timeToSample(startTime);
+		
+		var endTime = parseFloat(cutToInput.value);
+		var endSample = timeToSample(endTime);
 
-	var cutLength = endSample-startSample;
+		var cutLength = endSample-startSample;
 
-	var clipToCut = parseInt(cutClip.value);
-	var clipTimeline = projectState['audios'][local_user.editingAudio].timeline[clipToCut];
-	var clipLength = clipTimeline.end - clipTimeline.begin;
+		var clipToCut = parseInt(cutClip.value) - 1;
+		console.log(clipToCut);
 
-	var buffersCuts = [{}];
-	var startBuffer;
-	var midBuffer;
-	var endBuffer;
-	if(startSample===0){
-		startBuffer = {begin: startSample, end: endSample};
-		endBuffer = {begin:endSample+1,end:clipLength};
+		if(clipToCut>=0 && clipToCut<projectState['audios'][local_user.editingAudio].timeline.length && startSample>=0 && endSample<=projectState['audios'][local_user.editingAudio].cuts[clipToCut].end){
+			var clipTimeline = projectState['audios'][local_user.editingAudio].timeline[clipToCut];
+			var clipLength = clipTimeline.end - clipTimeline.begin;
 
-		startBufferTime = {begin: clipTimeline.begin, end: clipTimeline.begin + cutLength};
-		endBufferTime = {begin:clipTimeline.begin + cutLength+1, end:clipTimeline.end};
 
-		buffersCuts=[startBuffer,endBuffer];
-		bufferTimes=[startBufferTime, endBufferTime];
-	}
-	else if(endSample===clipLength){
+			var buffersCuts = [{}];
+			var startBuffer;
+			var midBuffer;
+			var endBuffer;
+			if(startSample===0){
+				startBuffer = {begin: startSample, end: endSample};
+				endBuffer = {begin:endSample+1,end:clipLength};
 
-		startBuffer = {begin: 0, end: startSample-1};
-		endBuffer = {begin: startSample, end: endSample};
+				startBufferTime = {begin: clipTimeline.begin, end: clipTimeline.begin + cutLength};
+				endBufferTime = {begin:clipTimeline.begin + cutLength+1, end:clipTimeline.end};
 
-		startBufferTime = {begin: clipTimeline.begin, end: clipTimeline.end - cutLength-1};
-		endBufferTime = {begin: clipTimeline.end - cutLength, end: clipTimeline.end};
+				buffersCuts=[startBuffer,endBuffer];
+				bufferTimes=[startBufferTime, endBufferTime];
+			}
+			else if(endSample===clipLength){
 
-		buffersCuts=[startBuffer,endBuffer];
-		bufferTimes=[startBufferTime, endBufferTime];
+				startBuffer = {begin: 0, end: startSample-1};
+				endBuffer = {begin: startSample, end: endSample};
+
+				startBufferTime = {begin: clipTimeline.begin, end: clipTimeline.end - cutLength-1};
+				endBufferTime = {begin: clipTimeline.end - cutLength, end: clipTimeline.end};
+
+				buffersCuts=[startBuffer,endBuffer];
+				bufferTimes=[startBufferTime, endBufferTime];
+			}
+			else{
+
+				startBuffer = {begin: 0, end: startSample-1};
+				midBuffer = {begin: startSample, end: endSample}
+				endBuffer = {begin: endSample+1, end: clipLength};
+
+				startBufferTime = {begin: clipTimeline.begin, end: clipTimeline.begin + startSample-1};
+				midBufferTime = {begin: clipTimeline.begin + startSample, end: clipTimeline.begin + endSample}
+				endBufferTime = {begin: clipTimeline.begin + endSample+1, end: clipTimeline.end};
+
+				buffersCuts=[startBuffer,midBuffer,endBuffer];
+				bufferTimes=[startBufferTime, midBufferTime, endBufferTime];
+			}
+
+			var cutMsg = {
+				editorId: local_user.id,
+				editor: local_user.name,
+				project: local_user.project,
+				track: local_user.editingAudio,
+				clip: clipToCut,  
+				cuts: buffersCuts,
+				timelines: bufferTimes,
+				type: 'cutAudio',
+			};
+
+			socket.send(JSON.stringify(cutMsg));
+		}
+		else{
+			var msg_bar = document.querySelector('.project_msg');
+			msg_bar.innerText = 'Time range or clip number invalid. This audio has ' + projectState['audios'][local_user.editingAudio].timeline.length + ' clips.';
+		}
 	}
 	else{
-
-		startBuffer = {begin: 0, end: startSample-1};
-		midBuffer = {begin: startSample, end: endSample}
-		endBuffer = {begin: endSample+1, end: clipLength};
-
-		startBufferTime = {begin: clipTimeline.begin, end: clipTimeline.begin + startSample-1};
-		midBufferTime = {begin: clipTimeline.begin + startSample, end: clipTimeline.begin + endSample}
-		endBufferTime = {begin: clipTimeline.begin + endSample+1, end: clipTimeline.end};
-
-		buffersCuts=[startBuffer,midBuffer,endBuffer];
-		bufferTimes=[startBufferTime, midBufferTime, endBufferTime];
+		var msg_bar = document.querySelector('.project_msg');
+		msg_bar.innerText = 'You are not editing any track. Please click the track button to procede.'
 	}
-
-	var cutMsg = {
-		editorId: local_user.id,
-		editor: local_user.name,
-		project: local_user.project,
-		track: local_user.editingAudio,
-		clip: clipToCut,  
-		cuts: buffersCuts,
-		timelines: bufferTimes,
-		type: 'cutAudio',
-	};
-
-	socket.send(JSON.stringify(cutMsg));	
+	
+		
 }
 
 function timeToSample(time){
@@ -574,39 +591,52 @@ moveBtn.addEventListener('click', moveAudio);
 //TODO: number clips always by order in timeline;
 //TODO: Do not permit overlap with clips;
 function moveAudio(){
-	//Get Start time Move
-	var destinationTime = parseFloat(moveToInput.value);
-	var destinationSample = timeToSample(destinationTime);
-	
-	var clipNumber = parseInt(moveInput_clip.value);
+	if(local_user.editingAudio !== null){	
+		//Get Start time Move
+		var destinationTime = parseFloat(moveToInput.value);
+		var destinationSample = timeToSample(destinationTime);
+		
+		var clipNumber = parseInt(moveInput_clip.value) - 1;
+		console.log(clipNumber);
 
-	var clipTimeline = projectState['audios'][local_user.editingAudio].timeline[clipNumber];
-	var clipLength = clipTimeline.end - clipTimeline.begin;
+		if(clipNumber>=0 && clipNumber<projectState['audios'][local_user.editingAudio].timeline.length && destinationSample>=0){
+			var clipTimeline = projectState['audios'][local_user.editingAudio].timeline[clipNumber];
+			var clipLength = clipTimeline.end - clipTimeline.begin;
 
-	var endSample = destinationSample+clipLength;
+			var endSample = destinationSample+clipLength;
 
-	// Check overlap if(true) => overlap not allowed
+			// Check overlap if(true) => overlap not allowed
 
-	var projSize;
-	if(endSample > projectState.size){
-		projSize = endSample;
+			var projSize;
+			if(endSample > projectState.size){
+				projSize = endSample;
+			}
+			else{
+				projSize = projectState.size;
+			}
+
+			var moveMsg = {
+				editorId: local_user.id,
+				editor: local_user.name,
+				project: local_user.project,
+				size: projSize,
+				track: local_user.editingAudio,
+				clip: clipNumber,  
+				timeline: {begin: destinationSample, end: endSample},
+				type: 'moveAudio',
+			};
+
+			socket.send(JSON.stringify(moveMsg));
+		}
+		else{
+			var msg_bar = document.querySelector('.project_msg');
+			msg_bar.innerText = 'Time range or clip number is invalid. This audio has ' + projectState['audios'][local_user.editingAudio].timeline.length + ' clips.';
+		}
 	}
 	else{
-		projSize = projectState.size;
+		var msg_bar = document.querySelector('.project_msg');
+		msg_bar.innerText = 'You are not editing any track. Please click the track button to procede.'
 	}
-
-	var moveMsg = {
-		editorId: local_user.id,
-		editor: local_user.name,
-		project: local_user.project,
-		size: projSize,
-		track: local_user.editingAudio,
-		clip: clipNumber,  
-		timeline: {begin: destinationSample, end: endSample},
-		type: 'moveAudio',
-	};
-
-	socket.send(JSON.stringify(moveMsg));
 
 }
 function checkOverlap(){
@@ -656,48 +686,6 @@ function changeTimelines(msg){
 
 var playButton = document.querySelector('#playBtn');
 playButton.addEventListener('click', getPlayAudio);
-
-// function prepareToPlay(){ //Function that prepares the buffers to play them in time and order
-// 	//TODO: Get timelines and gain to play here and delete global variable
-// 	var gains = [];
-// 	var timelines = [[]];
-// 	projectState.audios.map((audio,index)=>{
-// 		console.log(audio)
-// 		console.log(index)
-// 		gains[index] = audio.gain;
-// 		timelines[index] = [];
-// 		audio.timeline.map((time,ind) => {
-// 			console.log(time)
-// 			timelines[index][ind] = time;
-// 		})
-// 	})
-
-
-// 	buffersToPlay.map((track, index) =>{
-// 		track.map((buffer,ind)=>{
-// 			playAudio(buffer, timelines[index][ind], gains[index]);
-// 		})
-// 	})
-// }
-
-// function playAudio(buffer, timeline, gain){
-// 	var beginTime = sampleToTime(timeline.begin)
-// 	var endTime = sampleToTime(timeline.end)
-// 	console.log(beginTime)
-// 	console.log(endTime)
-// 	let source = context.createBufferSource();
-// 	source.buffer = buffer;
-// 	let gainNode = context.createGain();
-// 	source.connect(gainNode);
-// 	gainNode.connect(context.destination);
-// 	gainNode.gain.value = gain;
-// 	source.start(beginTime);
-// 	source.stop(endTime);
-// }
-
-// function pauseAudio(source){
-// 	source.stop(context.currentTime + 1);
-// }
 
 var exportButton = document.querySelector('#exportBtn');
 exportButton.addEventListener('click', exportAudio);
@@ -854,50 +842,80 @@ function changeGain(gainValue, track){ //By Message(update from other users chan
 }
 
 function mute(){
-	var gainMsg = {
-		editorId: local_user.id,
-		editor: local_user.name,
-		project: local_user.project,
-		track: local_user.editingAudio, 
-		gain: 0,
-		type: 'gainChange',
-	};
+	if(local_user.editingAudio !== null){	
+		var gainMsg = {
+			editorId: local_user.id,
+			editor: local_user.name,
+			project: local_user.project,
+			track: local_user.editingAudio, 
+			gain: 0,
+			type: 'gainChange',
+		};
 
-	socket.send(JSON.stringify(gainMsg));
+		socket.send(JSON.stringify(gainMsg));
+	}
+	else{
+		var msg_bar = document.querySelector('.project_msg');
+		msg_bar.innerText = 'You are not editing any track. Please click the track button to procede.'
+	}
 }
 
 // TODO: Merge increase and decrease into one function
 // TODO: Set maximum and minimum values of gain
 function decreaseGain(){
 	var gainDelta = 0.05;
-	var newGain = projectState['audios'][local_user.editingAudio].gain - gainDelta;
+	if(local_user.editingAudio !== null){
+		if(projectState['audios'][local_user.editingAudio].gain>0.05){
+			var newGain = projectState['audios'][local_user.editingAudio].gain - gainDelta;
+		}
+		else{
+			var newGain = 0;
+		}
+		
 
-	var gainMsg = {
-		editorId: local_user.id,
-		editor: local_user.name,
-		project: local_user.project,
-		track: local_user.editingAudio, 
-		gain: newGain,
-		type: 'gainChange',
-	};
+		var gainMsg = {
+			editorId: local_user.id,
+			editor: local_user.name,
+			project: local_user.project,
+			track: local_user.editingAudio, 
+			gain: newGain,
+			type: 'gainChange',
+		};
 
-	socket.send(JSON.stringify(gainMsg));
+		socket.send(JSON.stringify(gainMsg));
+	}
+	else{
+		var msg_bar = document.querySelector('.project_msg');
+		msg_bar.innerText = 'You are not editing any track. Please click the track button to procede.'
+	}
 }
 
 function increaseGain(){
 	var gainDelta = 0.05;
-	var newGain = projectState['audios'][local_user.editingAudio].gain + gainDelta;
+	if(local_user.editingAudio !== null){
+		if(projectState['audios'][local_user.editingAudio].gain<0.95){
+			var newGain = projectState['audios'][local_user.editingAudio].gain + gainDelta;
+		}
+		else{
+			var newGain = 1;
+		}
 
-	var gainMsg = {
-		editorId: local_user.id,
-		editor: local_user.name,
-		project: local_user.project,
-		track: local_user.editingAudio, 
-		gain: newGain,
-		type: 'gainChange',
-	};
+		var gainMsg = {
+			editorId: local_user.id,
+			editor: local_user.name,
+			project: local_user.project,
+			track: local_user.editingAudio, 
+			gain: newGain,
+			type: 'gainChange',
+		};
 
-	socket.send(JSON.stringify(gainMsg));
+		socket.send(JSON.stringify(gainMsg));
+	}
+	else{
+		var msg_bar = document.querySelector('.project_msg');
+		msg_bar.innerText = 'You are not editing any track. Please click the track button to procede.'
+	}
+	
 }
 
 function createCORSRequest(method, url) {
