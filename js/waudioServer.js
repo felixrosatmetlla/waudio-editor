@@ -1,18 +1,12 @@
 const express = require('express');
-const multer = require('multer');
-var path = '../Projects/tmp'
-const upload = multer({
-  dest: path // this saves your file into a directory called "uploads"
-}); 
+const multer = require('multer'); 
 const fs = require('fs'); //use the file system so we can save files
 const cors = require('cors')
 
-//Get wav file from binary only by changing name
-// var path = '/Users/felixrosatmetlla/waudio-editor/js/uploads/6e378b2afbb843ed6476e446369ea658';
-// fs.rename('/Users/felixrosatmetlla/waudio-editor/js/uploads/6e378b2afbb843ed6476e446369ea658', '/Users/felixrosatmetlla/waudio-editor/js/uploads/violin.wav', function (err) {
-//   if (err) throw err;
-//   console.log('renamed complete');
-// });
+var path = '../Projects/tmp'
+const upload = multer({
+  dest: path // this saves your file into a directory called "uploads"
+});
 
 const app = express();
 app.use(express.static('/home/farora/www/waudio-editor/'));

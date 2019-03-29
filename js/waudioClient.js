@@ -1,15 +1,17 @@
+// Audio context and fixed fs
 var context;
-var testAudioBuffer;
-
 var fs = 44100;
+
 // Create new server object
-// var socket = new WebSocket("ws://localhost:9023/");
 var socket = new WebSocket("ws://ecv-etic.upf.edu:9023/");
 
+// Global variables where to save the state of the world
 var buffers = [];
 var projectState = [];
 var buffersToPlay = [[]];
 var projectElements= [{}];
+
+// Client state
 var local_user = {
 	id: null,
 	name: '',
@@ -17,7 +19,7 @@ var local_user = {
 	editingAudio: null
 }
 
-// Login elements
+// Login HTML elements
 var loginPage = document.querySelector('.login');
 var editorPage = document.querySelector('.index');
 
@@ -25,25 +27,30 @@ var usernameInput = document.querySelector('#username_input');
 var projectInput = document.querySelector('#project_input');
 var loginButton = document.querySelector('.btn_enter');
 
+// Track HTML container
 var trackContainer = document.querySelector('.content')
 loginButton.addEventListener('click', requestProject);
 
-// Index elements
-var browser = document.getElementById('upload-audio');
+// Beowse Button
+var browse = document.getElementById('upload-audio');
 
 // Inform to user which audio has selected
-browser.change = function(){
+browse.change = function(){
 	var box = document.querySelector('.project_msg');
     box.innerText = "File selected to upload: " + box.value;
 }
+
 // TODO on improvements: Login Validation
-function requestProject(){
+function requestProject(){ //Function to request the project 
+	
+	// Change login for track page
 	hideLogin();
 	showEditor();
 
+	// Initialize Audio context
 	context = new (window.AudioContext || window.webkitAudioContext);
 
-	// get username value
+	// Get username and project requested
 	var projectName = projectInput.value;
 	var username = usernameInput.value;
 	var userObj = {
@@ -58,59 +65,64 @@ function requestProject(){
 		type: 'reqProj'
 	}
 
-	// To inform the user during the edition
+	// Inform the user during the edition
 	document.querySelector('.current_project').innerText = "Current Project: " + projectName;
 
-	// send data
+	// Send user and project info
 	socket.send(JSON.stringify(userObj));
 	socket.send(JSON.stringify(projectObj));
 
+	// Set local variables
 	local_user.name = username;
 	local_user.project = projectName;
 }
 
-socket.onmessage = function(message){
+socket.onmessage = function(message){ // Function to get server messages and manage correspondant actions
+	
+	// Parse JSON message
 	obj_msg = JSON.parse(message.data);
 
-	if (obj_msg.type === 'project'){
+	if (obj_msg.type === 'project'){ // Load Project
 		loadProject(obj_msg);
 	}
-	else if (obj_msg.type === 'editorMsg'){
+	else if (obj_msg.type === 'editorMsg'){ // Set track editor
 		checkEditor(obj_msg);
 	}
-	else if (obj_msg.type === 'moveAudio'){
+	else if (obj_msg.type === 'moveAudio'){ // Move a clip in a track
 		changeTimelines(obj_msg);
 	}
-	else if (obj_msg.type === 'cutAudio'){
+	else if (obj_msg.type === 'cutAudio'){ // Cut a clip in a track
 		getCutBuffers(obj_msg);
 	}
-	else if (obj_msg.type === 'gainChange'){
+	else if (obj_msg.type === 'gainChange'){ // Change volume in a track
 		changeGain(obj_msg.gain, obj_msg.track);
 	}
-	else if (obj_msg.type === 'editDeny'){
-		// TODO: Show in some way that you are not the editor
-	}
-	else if(obj_msg.type == 'newTrack'){
+	else if(obj_msg.type == 'newTrack'){ // Create a new track
 		setNewTrack(obj_msg);
 	}
-	else if(obj_msg.type === 'user'){
+	else if(obj_msg.type === 'user'){ // Set user information
 		checkUser(obj_msg);
 	}
-	else if(obj_msg.type === 'disconnection'){
+	else if(obj_msg.type === 'disconnection'){ // Manage disconnection of some user
 		disconnectedUser(obj_msg);
 	}
 }
 
 function disconnectedUser(msg){
+
+	// Get message bar and set disconnection message
 	var msg_bar = document.querySelector('.project_msg');
 	msg_bar.innerText = msg.name + ' has disconnected.'
-	console.log(msg)
+
+	// If the user was editing a track set the track to free
 	if(msg.editing !== null){
 		projectElements[msg.editing]['selectionBtn-'+msg.editing].innerText = 'Free';
 	}
 }
 
 function checkUser(msg){
+
+	// If it is the local user, set his id, else he will set the connection message
 	if(msg.name === local_user.name){
 		local_user.id = msg.id;
 	}
@@ -121,12 +133,13 @@ function checkUser(msg){
 }
 
 async function setNewTrack(msg){
-	console.log(msg);
+
+	// Get track number and load the audio from the server
 	var trackNum = projectState.audios.length;
-	console.log(trackNum)
 	loadAudio(msg.url,msg, trackNum);
 	await new Promise((resolve, reject) => setTimeout(resolve, 8000));
 
+	// Set message of the new track info and the metadata of the track to the local info
 	var length  = buffersToPlay[trackNum][0].length;
 	var newTrack = {
 		name: msg.name,
@@ -138,7 +151,9 @@ async function setNewTrack(msg){
         gain: 0.5,
         editor: ''
 	}
-	
+	projectState.audios[trackNum] = newTrack;
+
+	// Send the timeline and cuts info of tracks to the server
 	var updateTimeCutsMsg = {
 		project: local_user.project,
 		track: trackNum,
@@ -146,11 +161,9 @@ async function setNewTrack(msg){
 		cuts: newTrack.cuts,
 		type: 'updateTimeCut'
 	};
-
 	socket.send(JSON.stringify(updateTimeCutsMsg));
 
-	projectState.audios[trackNum] = newTrack;
-
+	// If the length of the new track is higher than the project length inform the server of timeline change
 	if(length > projectState.size){
 		projectState.size = length;
 
@@ -159,61 +172,73 @@ async function setNewTrack(msg){
 			newSize: length,
 			type: 'sizeChange'
 		}
-		// TODO: Delete Previous tracks
+		
+		socket.send(JSON.stringify(newSizeMsg));
+
+		// Re-render all the tracks
 		reRenderTracks();
-		// paintProject(buffersToPlay)
 	}
 	else{
+		// Render only the new track
 		trackElements(trackNum);
 		paintWaveform(buffersToPlay[trackNum][0],trackNum, 0);
 	}
 }
 
 function checkEditor(msg){
+	
 	if(msg.data === 'accepted'){
+
+		// If the new editor is the client and was editing nothing, show the editing tools
 		if(msg.editorName === local_user.name && msg.editing === null){
 			var editOptions = document.querySelector('.audio-options');
 			editOptions.style.display = 'grid';
 			local_user.editingAudio = msg.track; 
 		}
+
+		// Set the editor name in local data and in the button
 		projectState.audios[msg.track].editor = msg.editorName;
 		projectElements[msg.track]['selectionBtn-'+msg.track].innerText = msg.editorName;
+
+		// If the user was editing, set the track to free
 		if(msg.editing!==null){
 			projectElements[msg.editing]['selectionBtn-'+msg.editing].innerText = 'Free';
 		}	
 	}
 	else if(msg.data === 'denied'){
-		//TODO: Remark thta its not free
+		
+		// Show that someone is already editing the track
 		var msg_bar = document.querySelector('.project_msg');
-
 		if(msg.editorName === projectState.audios[msg.track].editor){ 
 			msg_bar.innerText = 'You cannot use this track because someone else is using it.'
 		}									
-
 	}
 }
 
 function paintWaveform(clip, track_index, clip_id){
+
+	// Create the canvas
 	var canvasContainer = document.querySelector('#track-waveform-'+track_index);
 	var waveCanvas = document.createElement("canvas");
 	waveCanvas.id = "canvas-"+track_index+'-'+clip_id;
 
-	// sample per second
+	// Compute the samples per second using the track width
 	var sample_per_second = projectElements[0]["track-waveform-0"].clientWidth/sampleToTime(projectState.size);
 	waveCanvas.width = Math.round(clip.duration * sample_per_second); //120 samples per second
 	waveCanvas.height = 150;
 	
-	// draw Timeline
+	// Draw Timeline
 	drawTimeline(sampleToTime(projectState.size),projectElements[0]["track-waveform-0"].clientWidth+20);
 
-	// Set init canvas position
+	// Set initial canvas position
 	var begin_pos = Math.round(sampleToTime(projectState.audios[track_index].timeline[clip_id].begin) * sample_per_second);
-
 	waveCanvas.style.left = begin_pos + "px";
 
+	// Set into html and save canvas
 	canvasContainer.appendChild(waveCanvas);
 	projectElements[track_index]['canvas'+'-'+clip_id] = waveCanvas;
 
+	// Create canvas context and delta
 	var delta = (clip.length / waveCanvas.width);// * clip.numberOfChannels;
 	var ctx = waveCanvas.getContext("2d");
 	ctx.clearRect(0,0,waveCanvas.width,waveCanvas.height);
@@ -227,6 +252,7 @@ function paintWaveform(clip, track_index, clip_id){
 	// Center of the track
 	var half_track = Math.floor(waveCanvas.height/2);
 	
+	// Draw
 	for(var i = 0; i < clip.length; i += delta)
 	{
 		var min = 0;
@@ -247,20 +273,21 @@ function paintWaveform(clip, track_index, clip_id){
 	waveCanvas.clip = clip;
 }
 
-//Fiund a way to do it and paint it
 function paintProject(buffersToPlay){
+	
+	// For each track create it, and paint the clips of each track
 	buffersToPlay.map((audio,index) => {
 		trackElements(index);
 
 		audio.map((clip,id)=>{
 			paintWaveform(clip,index, id);
-		})
-		
+		})	
 	})
 }
 
-
 function trackElements(index){
+
+	// Create each track element and save it into the client info
 	var trackDiv = document.createElement("div");
 	trackDiv.className = "track";
 	trackDiv.id = "track-"+index;
@@ -305,7 +332,6 @@ function trackElements(index){
 	var volumeButtn = document.createElement("button");
 	volumeButtn.className = " fa fa-volume-up center-icon";
 	volumeButtn.id = "volBtn-" + index;
-	// volumeButtn.innerHTML="volume"
 	volumeDiv.appendChild(volumeButtn);
 
 	projectElements[index][volumeButtn.id] = volumeButtn;
@@ -314,7 +340,6 @@ function trackElements(index){
 	var volumeUpButtn = document.createElement("button");
 	volumeUpButtn.className = " fa fa-caret-up btn-action";
 	volumeUpButtn.id = "upBtn-" + index;
-	// volumeUpButtn.innerHTML="volume up"
 	volumeDiv.appendChild(volumeUpButtn);
 
 	projectElements[index][volumeUpButtn.id] = volumeUpButtn;
@@ -323,7 +348,6 @@ function trackElements(index){
 	var volumeDownButtn = document.createElement("button");
 	volumeDownButtn.className = " fa fa-caret-down btn-action";
 	volumeDownButtn.id = "dwnBtn-" + index;
-	// volumeDownButtn.innerHTML="volume down"
 	volumeDiv.appendChild(volumeDownButtn);
 
 	projectElements[index][volumeDownButtn.id] = volumeDownButtn;
@@ -336,16 +360,12 @@ function trackElements(index){
 
 	projectElements[index][trackWaveDiv.id] = trackWaveDiv;
 
-
-
 	var editorSelection =document.createElement("div");
 	editorSelection.className = "selection";
 	editorSelection.id = "selection-" + index;
 	trackDiv.appendChild(editorSelection);
 
 	projectElements[index][editorSelection.id] = editorSelection;
-
-
 
 	var editorSelectButtn = document.createElement("button");
 	editorSelectButtn.className = " btn user-selected";
@@ -359,11 +379,11 @@ function trackElements(index){
 	projectElements[index][editorSelectButtn.id].addEventListener('click',()=>{
 		requestEdit(index);
 	})
-
 }
 
 function requestEdit(track_id){
 
+	// Create message to request edition and send it
 	var reqEditTrack = {
 		id: local_user.id,
 		name: local_user.name,
@@ -372,42 +392,35 @@ function requestEdit(track_id){
 		track: track_id,
 		type: 'reqEdit',
 	};
-	console.log(reqEditTrack);
 	socket.send(JSON.stringify(reqEditTrack));
 }
 
-function getTrackElement(trackId, elementId){
-	projectElements[trackId] = {};
-	var element = document.querySelector("." + elementId);
-	console.log(element)
-	projectElements[trackId][elementId] = element;
-}
-
 async function loadProject(projectMsg){
+	
 	// Save Project state
 	projectState = projectMsg;
+	
 	// Load Audios needed
-	console.log(projectState['audios']);
 	if(projectState['audios'].length === 0){
 		console.log('no load');
 	}
 	else{
+		// For every track load the audio and paint it
 		projectMsg.audios.map((x,index) => {
 		 	loadAudio(projectMsg.audios[index].url,x, index);
 		})
 		await new Promise((resolve, reject) => setTimeout(resolve, 8000));
 		paintProject(buffersToPlay);
 	}
-	
 }
 
 function loadAudio(url,audio, index){
-	// var request = new XMLHttpRequest();
+	
+	// Create xmlhttprequest with cors header and request the audios
 	var request = createCORSRequest('GET', url);
-	// request.open('GET', url, true);
-	// request.responseType = 'arraybuffer';
 
 	request.onload = function() {
+		// For each audio get the audio info and set the tracks and clips buffers
 		context.decodeAudioData(request.response).then(function(buffer) {
 			var data = buffer.getChannelData(0);
 			
@@ -419,8 +432,6 @@ function loadAudio(url,audio, index){
 					var emptyBuffer = new Float32Array(length);
 					var dummyBuffer = context.createBuffer(1, length, 44100);
 					
-				    
-
 					for (var i = x.begin, j=0; i < x.end; i++, j++) {
 				        var aux = data[i]
 				        emptyBuffer[j] = aux;
@@ -431,14 +442,12 @@ function loadAudio(url,audio, index){
 				})
 			}
 			else{
-
 				var length = data.length;
 				var dummyBuffer = context.createBuffer(1, length, 44100);
 				dummyBuffer.copyToChannel(data,0,0);
 				buffersToPlay[index] = [];
 			    buffersToPlay[index][0]=dummyBuffer;
 			}
-			console.log(buffersToPlay)
 			buffers[index]=data;
 		}, function onError(){
 			console.log('error');
@@ -447,25 +456,25 @@ function loadAudio(url,audio, index){
 	request.send();
 }
 
-function getAudioIndex(audioName){
-	splitAudioName = string.split('_');
-	return splitAudioName[1];
-}
-
+// Get cut tools
 var cutClip = document.querySelector("#cutInput_clip");
 var cutFromInput = document.querySelector("#cutInput_fromTime");
 var cutToInput = document.querySelector("#cutInput_toTime");
 var cutBtn = document.querySelector('#cutBtn');
 cutBtn.addEventListener('click', cutAudio);
 
-
 function getCutBuffers(msg){
+	
+	// For the edited track remove all the canvas
 	buffersToPlay[msg.track].map((clip,id)=>{
 		projectElements[msg.track]['canvas'+'-'+id].remove();
 	});
+
+	// Set the new cut and timelines info 
 	projectState.audios[msg.track]['cuts'].splice(msg.clip,1,...msg.cuts);
     projectState.audios[msg.track]['timeline'].splice(msg.clip,1,...msg.timelines);
 
+    // Get the new clips data and set into the local variable
 	var cutBuffers=[];
 	var clipData = buffersToPlay[msg.track][msg.clip].getChannelData(0);
 	projectState.audios[msg.track].cuts.map((x,index)=>{
@@ -484,13 +493,14 @@ function getCutBuffers(msg){
 
 	buffersToPlay[msg.track] = cutBuffers;
 
+	// Paint the clips
 	buffersToPlay[msg.track].map((clip,id)=>{
 		paintWaveform(clip,msg.track, id);
 	})
-
-
 }
 function cutAudio(){
+
+	// Check that is allowed to edit
 	if(local_user.editingAudio !== null){
 		var startTime = parseFloat(cutFromInput.value);
 		var startSample = timeToSample(startTime);
@@ -499,19 +509,18 @@ function cutAudio(){
 		var endSample = timeToSample(endTime);
 
 		var cutLength = endSample-startSample;
-
 		var clipToCut = parseInt(cutClip.value) - 1;
-		console.log(clipToCut);
 
+		// If the data on inputs is correct create the new cuts and timelines info and send it to teh server
 		if(clipToCut>=0 && clipToCut<projectState['audios'][local_user.editingAudio].timeline.length && startSample>=0 && endSample<=projectState['audios'][local_user.editingAudio].cuts[clipToCut].end){
 			var clipTimeline = projectState['audios'][local_user.editingAudio].timeline[clipToCut];
 			var clipLength = clipTimeline.end - clipTimeline.begin;
-
 
 			var buffersCuts = [{}];
 			var startBuffer;
 			var midBuffer;
 			var endBuffer;
+
 			if(startSample===0){
 				startBuffer = {begin: startSample, end: endSample};
 				endBuffer = {begin:endSample+1,end:clipLength};
@@ -568,9 +577,7 @@ function cutAudio(){
 	else{
 		var msg_bar = document.querySelector('.project_msg');
 		msg_bar.innerText = 'You are not editing any track. Please click the track button to procede.'
-	}
-	
-		
+	}			
 }
 
 function timeToSample(time){
@@ -583,6 +590,7 @@ function sampleToTime(sample){
 	return time;
 }
 
+// Move HTML elements
 var moveToInput = document.querySelector("#moveInput_time");
 var clipMoveInput = document.querySelector('#moveInput_clip');
 var moveBtn = document.querySelector('#moveBtn');
@@ -591,22 +599,23 @@ moveBtn.addEventListener('click', moveAudio);
 //TODO: number clips always by order in timeline;
 //TODO: Do not permit overlap with clips;
 function moveAudio(){
+
+	// Check user is allowed to edit
 	if(local_user.editingAudio !== null){	
-		//Get Start time Move
+
 		var destinationTime = parseFloat(moveToInput.value);
 		var destinationSample = timeToSample(destinationTime);
 		
 		var clipNumber = parseInt(moveInput_clip.value) - 1;
-		console.log(clipNumber);
 
+		// If the input values are correct set new timeline positions and send the message to server
 		if(clipNumber>=0 && clipNumber<projectState['audios'][local_user.editingAudio].timeline.length && destinationSample>=0){
 			var clipTimeline = projectState['audios'][local_user.editingAudio].timeline[clipNumber];
 			var clipLength = clipTimeline.end - clipTimeline.begin;
 
 			var endSample = destinationSample+clipLength;
 
-			// Check overlap if(true) => overlap not allowed
-
+			// If audio overpasses projectSize, we will inform the server in the move message
 			var projSize;
 			if(endSample > projectState.size){
 				projSize = endSample;
@@ -637,17 +646,16 @@ function moveAudio(){
 		var msg_bar = document.querySelector('.project_msg');
 		msg_bar.innerText = 'You are not editing any track. Please click the track button to procede.'
 	}
-
 }
-function checkOverlap(){
 
-}
 function reRenderTracks(){
 	deleteTracks();
 	paintProject(buffersToPlay);
 }
 
 function deleteTracks(){
+
+	// For each track delete alk the canvas and HTML track elements
 	projectElements.map((track, index) => {
 		var clipsNum = projectState.audios[index].timeline.length
 		for(i=0; i<clipsNum; i++){
@@ -667,43 +675,40 @@ function deleteTracks(){
 		track['track'+'-'+index].remove();
 	})
 }
+
 function changeTimelines(msg){
+	
+	// If the project size has changed, rerender all tracks, else only render the edited track
 	projectState['audios'][msg.track].timeline[msg.clip] = msg.timeline;
 
 	if(msg.size > projectState.size){
-		// TODO: Delete Previous tracks
 		projectState.size = msg.size;
 		reRenderTracks();
 	}
 	else{
 		projectElements[msg.track]['canvas'+'-'+msg.clip].remove();
 		paintWaveform(buffersToPlay[msg.track][msg.clip], msg.track, msg.clip)
-
-	}
-	
+	}	
 }
 
-
+// Get play button element
 var playButton = document.querySelector('#playBtn');
 playButton.addEventListener('click', getPlayAudio);
 
-var exportButton = document.querySelector('#exportBtn');
-exportButton.addEventListener('click', exportAudio);
-
 function getPlayAudio(){
+	
+	// For each track, get the clips info and sum it. Play each track separately
 	var fileSize = projectState.size;
-
-	console.log('To initiate');
 	buffersToPlay.map((track, index) => {
 		
 		var finalAudio = new Float32Array(fileSize);
 		var finalAudioBuffer = context.createBuffer(1, fileSize, 44100);
-			console.log('Track');
+		
 		buffersToPlay[index].map((clip,id)=>{
 			var dummyBuffer = new Float32Array(fileSize);
 			var clipTimeline = projectState.audios[index].timeline[id];
 			var clipData = clip.getChannelData(0);
-			console.log('clip')
+			
 			for(var i=clipTimeline.begin, j=0; i<clipTimeline.end; i++, j++){
 				dummyBuffer[i] = clipData[j];
 			}
@@ -713,6 +718,8 @@ function getPlayAudio(){
 			}
 		})
 		finalAudioBuffer.copyToChannel(finalAudio,0,0);
+
+		// Create source and apply gain of the track and play it from origin
 		let source = context.createBufferSource();
 		let gainNode = context.createGain();
 		source.buffer = finalAudioBuffer;
@@ -721,27 +728,27 @@ function getPlayAudio(){
 		gainNode.connect(context.destination);
 		source.start(0);
 	})
+}
 
-	
-}
+// Get export button element
+var exportButton = document.querySelector('#exportBtn');
+exportButton.addEventListener('click', exportAudio);
+
 function exportAudio(){
-	console.log('exporting')
 	getFinalAudio();
-	// createDownloadLink(finalAudioBlob);
 }
+
 function getFinalAudio(){
 	var fileSize = projectState.size;
 	var finalAudio = new Float32Array(fileSize);
 	var finalAudioBuffer = context.createBuffer(1, fileSize, 44100);
 
-	console.log('To initiate');
+	//For each track get the data and sum between tracks to obtain a final buffer
 	buffersToPlay.map((track, index) => {
-			console.log('Track');
 		buffersToPlay[index].map((clip,id)=>{
 			var dummyBuffer = new Float32Array(fileSize);
 			var clipTimeline = projectState.audios[index].timeline[id];
 			var clipData = clip.getChannelData(0);
-			console.log('clip')
 			for(var i=clipTimeline.begin, j=0; i<clipTimeline.end; i++, j++){
 				dummyBuffer[i] = clipData[j];
 			}
@@ -749,18 +756,15 @@ function getFinalAudio(){
 			for(var i=0; i<fileSize; i++){
 				finalAudio[i] = finalAudio[i] + dummyBuffer[i];
 			}
-
 		})
 	})
 
-	console.log(finalAudio);
 	finalAudioBuffer.copyToChannel(finalAudio,0,0);
 
 	make_download(finalAudioBuffer, fileSize);
 }
 
 function make_download(abuffer, total_samples) {
-	console.log(abuffer);
 	var container = document.querySelector('.project_msg');
 
 	// set sample length and rate
@@ -773,7 +777,8 @@ function make_download(abuffer, total_samples) {
 
 	// Make it downloadable
 	var link = document.createElement('a');
-	// var download_link = document.getElementById("download_link");
+	
+	// Set link info
 	link.href = new_file;
 	var name = new Date().toISOString() + '.wav';;
 	link.download = name;
@@ -842,6 +847,8 @@ function changeGain(gainValue, track){ //By Message(update from other users chan
 }
 
 function mute(){
+	
+	// If client is editor send mute message
 	if(local_user.editingAudio !== null){	
 		var gainMsg = {
 			editorId: local_user.id,
@@ -861,8 +868,9 @@ function mute(){
 }
 
 // TODO: Merge increase and decrease into one function
-// TODO: Set maximum and minimum values of gain
 function decreaseGain(){
+	
+	// Message to decrease gain in 0.05 steps
 	var gainDelta = 0.05;
 	if(local_user.editingAudio !== null){
 		if(projectState['audios'][local_user.editingAudio].gain>0.05){
@@ -872,7 +880,6 @@ function decreaseGain(){
 			var newGain = 0;
 		}
 		
-
 		var gainMsg = {
 			editorId: local_user.id,
 			editor: local_user.name,
@@ -891,6 +898,8 @@ function decreaseGain(){
 }
 
 function increaseGain(){
+	
+	// Message to increase gain in 0.05 steps
 	var gainDelta = 0.05;
 	if(local_user.editingAudio !== null){
 		if(projectState['audios'][local_user.editingAudio].gain<0.95){
@@ -915,7 +924,6 @@ function increaseGain(){
 		var msg_bar = document.querySelector('.project_msg');
 		msg_bar.innerText = 'You are not editing any track. Please click the track button to procede.'
 	}
-	
 }
 
 function createCORSRequest(method, url) {
@@ -947,17 +955,14 @@ function hideLogin(){ // Change display style as none to hide it
 	loginPage.style.display = "none"; 
 }
 
+// Get form
 var form = document.querySelector('#update-form');
 var fileInput = document.getElementById('upload-audio');   
 
-// // Maybe send a message to change the audio from /tmp/
+// On submit form get filename and set info to server
 form.onsubmit = function(event){
- 	//event.preventDefault();
 
  	var filename = fileInput.files[0].name;
- 	console.log(filename);
- 	console.log(fileInput.files[0]);
- 	console.log(event);
 
  	var uploadFileMsg = {
  		project: local_user.project,
@@ -968,24 +973,23 @@ form.onsubmit = function(event){
  	socket.send(JSON.stringify(uploadFileMsg));
 }
 
-
 function drawTimeline(maxValue, large){
-  var chart = new CanvasJS.Chart("timeline", {
+  	var chart = new CanvasJS.Chart("timeline", {
         width: large,
         height: 40,
         backgroundColor: "",
         axisX: [{
-          lineColor: "#C24642",
-          minimum: 0,
-          maximum: maxValue,
-                  }],
+	      lineColor: "#C24642",
+	      minimum: 0,
+	      maximum: maxValue,
+	              }],
         axisY:{
           title: "",
           tickLength: 0,
           lineThickness:0,
           margin:0,
           valueFormatString:" " //comment this to show numeric values
-      },
+      	},
 
         data: [
         {
@@ -993,94 +997,10 @@ function drawTimeline(maxValue, large){
           dataPoints: [
             {x: 1},
           ]
-        }, ]
+        },]
       });
       chart.width = large + "px";
       chart.render();
 
       document.querySelector('a.canvasjs-chart-credit').remove();
 }
-// 	var moveToProject = {
-// 		audioName:'',
-// 		origPath:'',
-// 		destPath:'',
-
-// 	}
-// }
-
-// var form = document.getElementById('file-form');
-// var fileSelect = document.getElementById('file-select');
-// var uploadButton = document.getElementById('upload-button');
-
-// form.onsubmit = function(event) {
-// 	event.preventDefault();
-
-// 	// Update button text.
-// 	uploadButton.innerHTML = 'Uploading...';
-
-// 	// Get the selected files from the input.
-// 	var files = fileSelect.files;
-
-// 	// Create a new FormData object.
-// 	var formData = new FormData();
-
-// 	// Loop through each of the selected files.
-// 	for (var i = 0; i < files.length; i++) {
-// 		var file = files[i];
-
-// 		// Check the file type.
-// 		if (!file.type.match('image.*')) {
-// 			continue;
-// 		}
-
-// 		// Add the file to the request.
-// 		formData.append('audios[]', file, file.name);
-// 	}
-
-// 	// Set up the request.
-// 	var request = new XMLHttpRequest();
-
-// 	// Open the connection.
-// 	request.open('POST', '/Upload', true);
-
-// 	// Set up a handler for when the request finishes.
-// 	request.onload = function () {
-// 		if (request.status === 200) {
-// 		// File(s) uploaded.
-// 			uploadButton.innerHTML = 'Upload';
-// 		} 
-// 		else {
-// 			alert('An error occurred!');
-// 		}
-// 	};
-
-// 	// Send the Data.
-// 	request.send(formData);
-// }
-
-// let soundBlob = soundFile.getBlob(); //get the recorded soundFile's blob & store it in a variable
-
-// let formdata = new FormData() ; //create a from to of data to upload to the server
-// formdata.append('soundBlob', soundBlob,  'myfiletosave.wav') ; // append the sound blob and the name of the file. third argument will show up on the server as req.file.originalname
-
-//   // Now we can send the blob to a server...
-// var serverUrl = '/upload'; //we've made a POST endpoint on the server at /upload
-// //build a HTTP POST request
-// var httpRequestOptions = {
-// 	method: 'POST',
-// 	body: formdata , // with our form data packaged above
-// 	headers: new Headers({
-// 	  'enctype': 'multipart/form-data' // the enctype is important to work with multer on the server
-// 	})
-// };
-// // console.log(httpRequestOptions);
-// // use p5 to make the POST request at our URL and with our options
-// httpDo(
-// serverUrl,
-// httpRequestOptions,
-// (successStatusCode)=>{ //if we were successful...
-//   console.log("uploaded recording successfully: " + successStatusCode)
-// },
-// (error)=>{console.error(error);}
-// )
-
